@@ -1,0 +1,7 @@
+# options
+--self init-only # redundantSelf
+--importgrouping testable-bottom # sortedImports
+--trimwhitespace always # trailingSpace
+
+# rules
+--rules redundantParens,redundantSelf,sortedImports,trailingSpace

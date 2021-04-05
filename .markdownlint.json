@@ -1,0 +1,7 @@
+{
+    "default": true,
+    "//MD033": "inline HTML tags warning",
+    "MD033": false,
+    "//MD013": "line-length > 80 warning",
+    "MD013": false
+}
