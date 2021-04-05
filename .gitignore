@@ -1,0 +1,15 @@
+.DS_Store
+.dart_tool/
+
+.idea/*
+!.idea/codeStyles
+!.idea/inspectionProfiles
+*.iml
+
+.packages
+.pub/
+
+build/
+
+Podfile.lock
+pubspec.lock
