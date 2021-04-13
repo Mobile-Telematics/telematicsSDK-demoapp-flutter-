@@ -20,6 +20,7 @@ class _TitleScreenState extends State<TitleScreen> {
   final _trackingApi = TrackingApi();
   late StreamSubscription<PermissionWizardResult?>
       _onPermissionWizardStateChanged;
+  late StreamSubscription<bool> _onLowerPower;
 
   var _deviceId = virtualDeviceToken;
 
@@ -29,6 +30,7 @@ class _TitleScreenState extends State<TitleScreen> {
 
     _onPermissionWizardStateChanged =
         _trackingApi.onPermissionWizardClose.listen(_onPermissionWizardResult);
+    _onLowerPower = _trackingApi.lowerPowerMode.listen(_onLowPowerResult);
 
     initPlatformState();
   }
@@ -63,7 +65,7 @@ class _TitleScreenState extends State<TitleScreen> {
               labelText: 'virtual device token',
             ),
             keyboardType: TextInputType.text,
-            textInputAction: TextInputAction.next,
+            textInputAction: TextInputAction.done,
             maxLengthEnforcement: MaxLengthEnforcement.none,
             onChanged: (value) {
               setState(() {
@@ -134,15 +136,15 @@ class _TitleScreenState extends State<TitleScreen> {
             },
             child: const Text('Stop tracking manually'),
           ),
-          _sizedBoxSpace,
-          ElevatedButton(
-            onPressed: () async {
-              if (!(await _trackingApi.isSdkEnabled() ?? false)) {
-                _showSnackBar('Enable SDK first');
-              } else {}
-            },
-            child: const Text('Dashboard'),
-          ),
+          // _sizedBoxSpace,
+          // ElevatedButton(
+          //   onPressed: () async {
+          //     if (!(await _trackingApi.isSdkEnabled() ?? false)) {
+          //       _showSnackBar('Enable SDK first');
+          //     } else {}
+          //   },
+          //   child: const Text('Dashboard'),
+          // ),
         ],
       )),
     );
@@ -151,6 +153,7 @@ class _TitleScreenState extends State<TitleScreen> {
   @override
   void dispose() {
     _onPermissionWizardStateChanged.cancel();
+    _onLowerPower.cancel();
 
     super.dispose();
   }
@@ -163,6 +166,14 @@ class _TitleScreenState extends State<TitleScreen> {
     };
 
     _showSnackBar(_wizardResultMapping[result] ?? '');
+  }
+
+  void _onLowPowerResult(bool isLowPower) {
+    if (isLowPower) {
+      _showSnackBar(
+        "Low Power Mode.\nYour trips may be not recorded. Please, follow to Settings=>Battery=>Low Power",
+      );
+    }
   }
 
   void _showSnackBar(String text) {

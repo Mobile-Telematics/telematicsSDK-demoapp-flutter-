@@ -4,7 +4,9 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.NonNull
+import org.json.JSONObject
 import com.raxeltelematics.v2.sdk.TrackingApi
+import com.raxeltelematics.v2.sdk.server.model.sdk.TrackTag
 import com.raxeltelematics.v2.sdk.utils.permissions.PermissionsWizardActivity
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -15,6 +17,14 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.ActivityResultListener
+
+class WizardConstants {
+    companion object {
+        const val allGranted = "WIZARD_RESULT_ALL_GRANTED"
+        const val notAllGranted = "WIZARD_RESULT_NOT_ALL_GRANTED"
+        const val canceled = "WIZARD_RESULT_CANCELED"
+    }
+}
 
 /** TelematicsSDKPlugin */
 class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin,
@@ -40,6 +50,9 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "telematics_sdk")
         channel.setMethodCallHandler(this)
         context = flutterPluginBinding.applicationContext
+
+        /// register callbacks
+        api.addTagsProcessingCallback(TagsProcessingListenerImp(channel))
     }
 
     override fun onDetachedFromActivity() {
@@ -69,9 +82,16 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "isTracking" -> isTracking(result)
             "setDeviceID" -> setDeviceID(call, result)
             "setEnableSdk" -> setEnableSdk(call, result)
-            "showPermissionWizard" -> showPermissionWizard(call, result)
             "startTracking" -> startTracking(result)
             "stopTracking" -> stopTracking(result)
+            "showPermissionWizard" -> showPermissionWizard(call, result)
+            "getTrackTags" -> getTrackTags(call, result)
+            "addTrackTags" -> addTrackTags(call, result)
+            "removeTrackTags" -> removeTrackTags(call, result)
+            "getFutureTrackTags" -> getFutureTrackTags(result)
+            "addFutureTrackTag" -> addFutureTrackTag(call, result)
+            "removeFutureTrackTag" -> removeFutureTrackTag(call, result)
+            "removeAllFutureTrackTags" -> removeAllFutureTrackTags(result)
             else -> result.notImplemented()
         }
     }
@@ -82,11 +102,11 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
             when (resultCode) {
                 PermissionsWizardActivity.WIZARD_RESULT_ALL_GRANTED -> wizardResult =
-                    "WIZARD_RESULT_ALL_GRANTED"
+                    WizardConstants.allGranted
                 PermissionsWizardActivity.WIZARD_RESULT_NOT_ALL_GRANTED -> wizardResult =
-                    "WIZARD_RESULT_NOT_ALL_GRANTED"
+                    WizardConstants.notAllGranted
                 PermissionsWizardActivity.WIZARD_RESULT_CANCELED -> wizardResult =
-                    "WIZARD_RESULT_CANCELED"
+                    WizardConstants.canceled
             }
 
             channel.invokeMethod("onPermissionWizardResult", wizardResult)
@@ -96,37 +116,37 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         return false
     }
 
-    private fun clearDeviceID(@NonNull result: Result) {
+    private fun clearDeviceID(result: Result) {
         api.clearDeviceID()
 
         result.success(null)
     }
 
-    private fun getDeviceId(@NonNull result: Result) {
+    private fun getDeviceId(result: Result) {
         val deviceId = api.getDeviceId()
 
         result.success(deviceId)
     }
 
-    private fun isSdkEnabled(@NonNull result: Result) {
+    private fun isSdkEnabled(result: Result) {
         val isEnabled = api.isSdkEnabled()
 
         result.success(isEnabled)
     }
 
-    private fun isTracking(@NonNull result: Result) {
+    private fun isTracking(result: Result) {
         val isTracking = api.isTracking()
 
         result.success(isTracking)
     }
 
-    private fun isAllRequiredPermissionsAndSensorsGranted(@NonNull result: Result) {
+    private fun isAllRequiredPermissionsAndSensorsGranted(result: Result) {
         val isGranted = api.isAllRequiredPermissionsAndSensorsGranted()
 
         result.success(isGranted)
     }
 
-    private fun setDeviceID(@NonNull call: MethodCall, @NonNull result: Result) {
+    private fun setDeviceID(call: MethodCall, result: Result) {
         val deviceId = call.argument<String?>("deviceId") as String
 
         api.setDeviceID(deviceId)
@@ -134,27 +154,31 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         result.success(null)
     }
 
-    private fun setEnableSdk(@NonNull call: MethodCall, @NonNull result: Result) {
+    private fun setEnableSdk(call: MethodCall, result: Result) {
         val enable = call.argument<Boolean?>("enable") as Boolean
+        val uploadBeforeDisabling = call.argument<Boolean?>("uploadBeforeDisabling") as Boolean
 
-        api.setEnableSdk(enable)
-
+        if (!enable && uploadBeforeDisabling) {
+            api.setDisableWithUpload()
+        } else {
+            api.setEnableSdk(enable)
+        }
         result.success(null)
     }
 
-    private fun startTracking(@NonNull result: Result) {
+    private fun startTracking(result: Result) {
         val startResult = api.startTracking()
 
         result.success(startResult)
     }
 
-    private fun stopTracking(@NonNull result: Result) {
+    private fun stopTracking(result: Result) {
         val stopResult = api.stopTracking()
 
         result.success(stopResult)
     }
 
-    private fun showPermissionWizard(@NonNull call: MethodCall, @NonNull result: Result) {
+    private fun showPermissionWizard(call: MethodCall, result: Result) {
         val enableAggressivePermissionsWizard =
             call.argument<Boolean?>("enableAggressivePermissionsWizard") as Boolean
         val enableAggressivePermissionsWizardPage =
@@ -167,6 +191,75 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
                 enableAggressivePermissionsWizardPage = enableAggressivePermissionsWizardPage,
             ), PermissionsWizardActivity.WIZARD_PERMISSIONS_CODE
         )
+
+        result.success(null)
+    }
+
+    private fun getTrackTags(call: MethodCall, result: Result) {
+        val trackId = call.argument<String?>("trackId") as String
+
+        val res = api.getTrackTags(trackId).map { it.toJsonString() }.toTypedArray()
+
+        result.success(res)
+    }
+
+    private fun addTrackTags(call: MethodCall, result: Result) {
+        val trackId = call.argument<String?>("trackId") as String
+        val strings = call.argument<Array<String>?>("tags") as Array<String>
+
+        val tags = strings.map {
+            val json = JSONObject(it)
+            val tag = json["tag"] as String
+            val source = json["source"] as String
+            TrackTag(tag, source)
+        }.toTypedArray()
+
+        val res = api.addTrackTags(trackId, tags).map { it.toJsonString() }.toTypedArray()
+
+        result.success(res)
+    }
+
+    private fun removeTrackTags(call: MethodCall, result: Result) {
+        val trackId = call.argument<String?>("trackId") as String
+        val strings = call.argument<Array<String>?>("tags") as Array<String>
+
+        val tags = strings.map {
+            val json = JSONObject(it)
+            val tag = json["tag"] as String
+            val source = json["source"] as String
+            TrackTag(tag, source)
+        }.toTypedArray()
+
+        val res = api.removeTrackTags(trackId, tags).map { it.toJsonString() }.toTypedArray()
+
+        result.success(res)
+    }
+
+    private fun getFutureTrackTags(result: Result) {
+        api.getFutureTrackTags()
+
+        result.success(null)
+    }
+
+    private fun addFutureTrackTag(call: MethodCall, result: Result) {
+        val tag = call.argument<String?>("tag") as String
+        val source = call.argument<String?>("source") as String
+
+        api.addFutureTrackTag(tag, source)
+
+        result.success(null)
+    }
+
+    private fun removeFutureTrackTag(call: MethodCall, result: Result) {
+        val tag = call.argument<String?>("tag") as String
+
+        api.removeFutureTrackTag(tag)
+
+        result.success(null)
+    }
+
+    private fun removeAllFutureTrackTags(result: Result) {
+        api.removeAllFutureTrackTags()
 
         result.success(null)
     }

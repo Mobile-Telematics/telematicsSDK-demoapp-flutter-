@@ -20,6 +20,14 @@ open class TelematicsSDKApp : FlutterApplication() {
         }
     }
 
+    /**
+     * Default Setting constructor
+     * Stop tracking time is 5 minute.
+     * Parking radius is 100 meters.
+     * Auto start tracking is true.
+     * hfOn - true if HIGH FREQUENCY data recording from sensors (acc, gyro) is ON and false otherwise.
+     * isElmOn - true if data recording from ELM327 devices is ON and false otherwise.
+     */
     open fun setTelematicsSettings(): Settings {
         val settings = Settings(
             stopTrackingTimeout = Settings.stopTrackingTimeHigh,

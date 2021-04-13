@@ -41,5 +41,19 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>location</string>
+        <string>remote-notification</string>
+    </array>
+    <key>NSMotionUsageDescription</key>
+    <string>Please, provide permissions for this Demo</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Please, provide permissions for this Demo</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Please, provide permissions for this Demo</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Please, provide permissions for this Demo</string>
 </dict>
 </plist>
