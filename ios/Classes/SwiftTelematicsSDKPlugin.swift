@@ -189,8 +189,16 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             var res = [String]()
 
             tags?.tags.forEach { element in
-                let str = String(data: element.toJSON() as! Data, encoding: .utf8)!
-                res.append(str)
+                do {
+                    let json = try JSONSerialization.data(withJSONObject: element.toJSON(), options: .prettyPrinted)
+                    let str = String(data: json, encoding: .utf8)!
+                    res.append(str)
+                } catch {
+                    result(FlutterError(code: FlutterPluginCode.failure,
+                                        message: "Json serialization of tag failed",
+                                        details: nil)
+                    )
+                }
             }
 
             result(res)
@@ -209,7 +217,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
                     return RPTag.init(json: json)!
                 } catch {
                     result(FlutterError(code: FlutterPluginCode.failure,
-                                        message: "Json deserialization of track failed",
+                                        message: "Json deserialization of tag failed",
                                         details: nil)
                     )
                 }
@@ -223,8 +231,16 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             var res = [String]()
 
             tags?.tags.forEach { element in
-                let str = String(data: element.toJSON() as! Data, encoding: .utf8)!
-                res.append(str)
+                do {
+                    let json = try JSONSerialization.data(withJSONObject: element.toJSON(), options: .prettyPrinted)
+                    let str = String(data: json, encoding: .utf8)!
+                    res.append(str)
+                } catch {
+                    result(FlutterError(code: FlutterPluginCode.failure,
+                                        message: "Json serialization of tag failed",
+                                        details: nil)
+                    )
+                }
             }
 
             result(res)
@@ -243,7 +259,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
                     return RPTag.init(json: json)!
                 } catch {
                     result(FlutterError(code: FlutterPluginCode.failure,
-                                        message: "Json deserialization of track failed",
+                                        message: "Json deserialization of tag failed",
                                         details: nil)
                     )
                 }
@@ -257,8 +273,16 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             var res = [String]()
 
             tags?.tags.forEach { element in
-                let str = String(data: element.toJSON() as! Data, encoding: .utf8)!
-                res.append(str)
+                do {
+                    let json = try JSONSerialization.data(withJSONObject: element.toJSON(), options: .prettyPrinted)
+                    let str = String(data: json, encoding: .utf8)!
+                    res.append(str)
+                } catch {
+                    result(FlutterError(code: FlutterPluginCode.failure,
+                                        message: "Json serialization of tag failed",
+                                        details: nil)
+                    )
+                }
             }
 
             result(res)
@@ -266,10 +290,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
 
     }
     
-    private func getFutureTrackTags(_ result: @escaping FlutterResult) {
-        let timestamp = Date().currentTimeMillis()
-        
-        RPEntry.instance().api.getFutureTrackTag(timestamp, completion: nil)
+    private func getFutureTrackTags(_ result: @escaping FlutterResult) {        
+        RPEntry.instance().api.getFutureTrackTag(0, completion: nil)
         
         result(nil)
     }

@@ -10,23 +10,33 @@ class TagStateDelegate: NSObject, RPTagsServerStateDelegate {
     }
     
     func addTag(_ status: RPTagStatus, tag: RPTag!, timestamp: Int) {
-        let json: [String : Any?] = [
-            "status": String(describing: status),
-            "tag": String(data: tag.toJSON() as! Data, encoding: .utf8),
-            "activationTime": timestamp
-        ]
-        
-        channel?.invokeMethod("onAddTag", arguments: json)
+        do {
+            let jsonTag = try JSONSerialization.data(withJSONObject: tag.toJSON(), options: .prettyPrinted)
+            let strTag = String(data: jsonTag, encoding: .utf8)!
+            
+            let json: [String : Any?] = [
+                "status": String(describing: status),
+                "tag": strTag,
+                "activationTime": timestamp
+            ]
+            
+            channel?.invokeMethod("onAddTag", arguments: json)
+        } catch {}
     }
     
     func deleteTag(_ status: RPTagStatus, tag: RPTag!, timestamp: Int) {
-        let json: [String : Any?] = [
-            "status": String(describing: status),
-            "tag": String(data: tag.toJSON() as! Data, encoding: .utf8),
-            "deactivationTime": timestamp
-        ]
-        
-        channel?.invokeMethod("onTagRemove", arguments: json)
+        do {
+            let jsonTag = try JSONSerialization.data(withJSONObject: tag.toJSON(), options: .prettyPrinted)
+            let strTag = String(data: jsonTag, encoding: .utf8)!
+            
+            let json: [String : Any?] = [
+                "status": String(describing: status),
+                "tag": strTag,
+                "deactivationTime": timestamp
+            ]
+            
+            channel?.invokeMethod("onTagRemove", arguments: json)
+        } catch {}
     }
     
     func removeAll(_ status: RPTagStatus, timestamp: Int) {
@@ -38,14 +48,18 @@ class TagStateDelegate: NSObject, RPTagsServerStateDelegate {
         channel?.invokeMethod("onAllTagsRemove", arguments: json)
     }
     
-    func getTags(_ status: RPTagStatus, tags: Any!, timestamp: Int) {
+    func getTags(_ status: RPTagStatus, tags: Any, timestamp: Int) {
         let _tags = tags as? RPTags
         
         var strTags = [String]()
-
+        
         _tags?.tags.forEach { element in
-            let str = String(data: element.toJSON() as! Data, encoding: .utf8)!
-            strTags.append(str)
+            do {
+                let jsonTag = try JSONSerialization.data(withJSONObject: element.toJSON(), options: .prettyPrinted)
+                let strTag = String(data: jsonTag, encoding: .utf8)!
+                
+                strTags.append(strTag)
+            } catch {}
         }
         
         let json: [String : Any?] = [
