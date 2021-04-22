@@ -84,6 +84,27 @@ add network permissions
     }
     ```
 
+### iOS
+
+Add permissions in your project's `ios/Runner/Info.plist`:
+
+``` xml
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>location</string>
+        <string>remote-notification</string>
+    </array>
+    <key>NSMotionUsageDescription</key>
+    <string>Please, provide permissions for this Demo</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Please, provide permissions for this Demo</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Please, provide permissions for this Demo</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Please, provide permissions for this Demo</string>
+```
+
 ## Links
 
 [https://telematicssdk.com/](https://telematicssdk.com/)
