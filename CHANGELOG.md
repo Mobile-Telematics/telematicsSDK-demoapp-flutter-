@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+* Updated Android sdk version to 2.2.253
+
 ## 0.1.0
 
 * Add `deviceID` methods: `setDeviceID`, `getDeviceID`, `clearDeviceID`.
