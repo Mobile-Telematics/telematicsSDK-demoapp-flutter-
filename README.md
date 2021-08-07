@@ -9,7 +9,7 @@ When using Telematics SDK refer to these [terms of use](https://docs.telematicss
 
 ### Initial app setup & credentials
 
-For commercial use, you need create sandbox account [DataHub](https://userdatahub.com/user/registration) and get `InstanceId` auth keys to work with our API.
+For commercial use, you need create a developer workspace in [DataHub](https://userdatahub.com/user/registration) and get `InstanceId` and `InstanceKey` auth keys to work with our API.
 
 ### Android
 
