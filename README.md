@@ -75,12 +75,12 @@ add network permissions
 
     ```
 
-3. add Raxel repository into (module)/gradle.build
+3. add Telematics SDK repository into (module)/gradle.build
 
     ```groovy
     dependencies {
         //...
-        implementation "com.telematicssdk:tracking: 2.2.231"
+        implementation "com.telematicssdk:tracking: 2.2.253"
     }
     ```
 
