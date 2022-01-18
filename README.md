@@ -107,4 +107,4 @@ Add permissions in your project's `ios/Runner/Info.plist`:
 
 ## Links
 
-[https://telematicssdk.com/](https://telematicssdk.com/)
+[https://telematicssdk.com/](https://damoov.com/)
