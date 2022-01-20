@@ -103,7 +103,15 @@ Add permissions in your project's `ios/Runner/Info.plist`:
     <string>Please, provide permissions for this Demo</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Please, provide permissions for this Demo</string>
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>sdk.damoov.apprefreshtaskid</string>
+        <string>sdk.damoov.appprocessingtaskid</string>
+    </array>
 ```
+Starting from iOS version 15 and above, as well as Flutter 2.0.6, modification of `ios/Runner/AppDelegate.swift` is required 
+You must request permissions for the application before GeneratedPluginRegistrant
+[Example AppDelegate.swift](https://github.com/Mobile-Telematics/telematicsSDK-demoapp-flutter-/blob/main/example/ios/Runner/AppDelegate.swift)
 
 ## Links
 
