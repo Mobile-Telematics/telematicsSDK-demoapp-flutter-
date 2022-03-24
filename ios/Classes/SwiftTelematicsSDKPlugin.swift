@@ -60,7 +60,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         case "getFutureTrackTags":
             getFutureTrackTags(result)
         case "addFutureTrackTag":
-            addTrackTags(call, result)
+            addFutureTrackTag(call, result)
         case "removeFutureTrackTag":
             removeFutureTrackTag(call, result)
         case "removeAllFutureTrackTags":
