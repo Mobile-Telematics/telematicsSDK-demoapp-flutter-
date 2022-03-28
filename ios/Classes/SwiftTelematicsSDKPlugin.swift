@@ -38,7 +38,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         case "isSdkEnabled":
             isSDKEnabled(result)
         case "isTracking":
-            isTrackingEnabled(result)
+            isTracking(result)
         case "setDeviceID":
             setDeviceID(call, result: result)
         case "setEnableSdk":
@@ -88,8 +88,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         result(RPEntry.isSDKEnabled())
     }
 
-    private func isTrackingEnabled(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance().isTrackingEnabled())
+    private func isTracking(_ result: @escaping FlutterResult) {
+        result(RPTracker.instance()?.isActive)
     }
 
     private func setDeviceID(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
