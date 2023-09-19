@@ -2,14 +2,14 @@
 
 A flutter plugin for tracking the person's driving behavior such as speeding, turning, braking and several other things on iOS and Android.
 
-__Disclaimer__: This project uses Telematics SDK which belongs to DATA MOTION PTE. LTD.  
-When using Telematics SDK refer to these [terms of use](https://docs.telematicssdk.com/license)
+__Disclaimer__: This project uses Telematics SDK which belongs to DAMOOV PTE. LTD.  
+When using Telematics SDK refer to these [terms of use](https://docs.damoov.com/docs/license)
 
 ## Getting Started
 
 ### Initial app setup & credentials
 
-For commercial use, you need create a developer workspace in [DataHub](https://userdatahub.com/user/registration) and get `InstanceId` and `InstanceKey` auth keys to work with our API.
+For commercial use, you need create a developer workspace in [DataHub](https://app.damoov.com) and get `InstanceId` and `InstanceKey` auth keys to work with our API.
 
 ### Android
 
@@ -115,4 +115,4 @@ You must request permissions for the application before GeneratedPluginRegistran
 
 ## Links
 
-[https://telematicssdk.com/](https://damoov.com/)
+[https://damoov.com](https://damoov.com/)
