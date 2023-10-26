@@ -89,7 +89,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     }
 
     private func isTracking(_ result: @escaping FlutterResult) {
-        result(RPTracker.instance()?.isActive)
+        result(RPTracker.instance().isActive)
     }
 
     private func setDeviceID(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
