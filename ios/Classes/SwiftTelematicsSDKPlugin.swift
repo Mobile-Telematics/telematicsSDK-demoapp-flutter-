@@ -122,6 +122,16 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     }
     
     private func isSDKEnabled(_ result: @escaping FlutterResult) {
+        guard let token = RPEntry.instance().virtualDeviceToken else {
+            result(false)
+            return
+        }
+        
+        if (token as String).isEmpty {
+            result(false)
+            return
+        }
+        
         result(RPEntry.isSDKEnabled())
     }
     
@@ -132,7 +142,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     private func setDeviceID(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         if let deviceId = args["deviceId"] as? String {
-            RPEntry.instance().virtualDeviceToken = deviceId as NSString
+            let virtualDeviceToken = NSString(string: deviceId)
+            RPEntry.instance().virtualDeviceToken = virtualDeviceToken
         } else {
             RPEntry.instance().virtualDeviceToken = nil
         }

@@ -157,6 +157,8 @@ class _TitleScreenState extends State<TitleScreen> {
     } else {
       await _trackingApi.setDeviceID(deviceId: _deviceId);
       await _trackingApi.setEnableSdk(enable: true);
+      await _trackingApi.enableHF(value: true);
+      await _trackingApi.setAggressiveHeartbeats(value: true);
 
       setState(() {
         _isSdkEnabled = true;
@@ -165,7 +167,7 @@ class _TitleScreenState extends State<TitleScreen> {
   }
 
   Future<void> _onDisableSDK() async {
-    await _trackingApi.setEnableSdk(enable: false);
+    await _trackingApi.setEnableSdk(enable: false, uploadBeforeDisabling: true);
     await _trackingApi.clearDeviceID();
 
     setState(() {
@@ -198,23 +200,21 @@ class _TitleScreenState extends State<TitleScreen> {
       _showSnackBar('Stop current track first');
     } else {
       _trackingApi.startTracking();
+      setState(() {
+        _isTracking = true;
+      });
     }
-
-    setState(() {
-      _isTracking = true;
-    });
   }
 
   Future<void> _onStopTracking() async {
     if (await _trackingApi.isTracking() ?? false) {
       _trackingApi.stopTracking();
+      setState(() {
+        _isTracking = false;
+      });
     } else {
       _showSnackBar('Start tracking first');
     }
-
-    setState(() {
-      _isTracking = false;
-    });
   }
 
   void _onLowPowerResult(bool isLowPower) {
