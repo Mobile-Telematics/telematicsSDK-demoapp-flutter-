@@ -170,7 +170,7 @@ class _TitleScreenState extends State<TitleScreen> {
   }
 
   Future<void> _onDisableSDK() async {
-    await _trackingApi.setEnableSdk(enable: false, uploadBeforeDisabling: true);
+    await _trackingApi.setEnableSdk(enable: false);
     await _trackingApi.clearDeviceID();
     _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
     setState(() {});
