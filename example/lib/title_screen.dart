@@ -21,11 +21,13 @@ class _TitleScreenState extends State<TitleScreen> {
   late StreamSubscription<PermissionWizardResult?>
       _onPermissionWizardStateChanged;
   late StreamSubscription<bool> _onLowerPower;
+  late StreamSubscription<TrackLocation> _onLocationChanged;
 
   var _deviceId = virtualDeviceToken;
   var _isSdkEnabled = false;
   var _isAllRequiredPermissionsGranted = false;
   var _isTracking = false;
+  TrackLocation? _location;
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _TitleScreenState extends State<TitleScreen> {
     _onPermissionWizardStateChanged =
         _trackingApi.onPermissionWizardClose.listen(_onPermissionWizardResult);
     _onLowerPower = _trackingApi.lowerPowerMode.listen(_onLowPowerResult);
+    _onLocationChanged = _trackingApi.locationChanged.listen(_onLocationChangedResult);
 
     initPlatformState();
   }
@@ -71,6 +74,7 @@ class _TitleScreenState extends State<TitleScreen> {
                 'Permissions: ${_isAllRequiredPermissionsGranted ? 'Granted' : 'Not granted'}',
               ),
               Text('Tracking: ${_isTracking ? 'Started' : 'Not stated'}'),
+              Text(_getCurrentLocation()),
             ]),
         Center(
             child: ListView(
@@ -145,7 +149,7 @@ class _TitleScreenState extends State<TitleScreen> {
   void dispose() {
     _onPermissionWizardStateChanged.cancel();
     _onLowerPower.cancel();
-
+    _onLocationChanged.cancel();
     super.dispose();
   }
 
@@ -159,20 +163,17 @@ class _TitleScreenState extends State<TitleScreen> {
       await _trackingApi.setEnableSdk(enable: true);
       await _trackingApi.enableHF(value: true);
       await _trackingApi.setAggressiveHeartbeats(value: true);
-
-      setState(() {
-        _isSdkEnabled = true;
-      });
+      await _trackingApi.stopTracking();
+      _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
+      setState(() {});
     }
   }
 
   Future<void> _onDisableSDK() async {
     await _trackingApi.setEnableSdk(enable: false, uploadBeforeDisabling: true);
     await _trackingApi.clearDeviceID();
-
-    setState(() {
-      _isSdkEnabled = false;
-    });
+    _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
+    setState(() {});
   }
 
   void _onPermissionWizardResult(PermissionWizardResult result) {
@@ -194,21 +195,31 @@ class _TitleScreenState extends State<TitleScreen> {
   }
 
   Future<void> _onStartTracking() async {
-    if (!(await _trackingApi.isSdkEnabled() ?? false)) {
+    final isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
+
+    if (!isSdkEnabled) {
       _showSnackBar('Enable SDK first');
-    } else if (await _trackingApi.isTracking() ?? false) {
-      _showSnackBar('Stop current track first');
-    } else {
-      _trackingApi.startTracking();
-      setState(() {
-        _isTracking = true;
-      });
+      return;
     }
+
+    final isTracking = await _trackingApi.isTracking() ?? false;
+
+    if (isTracking) {
+      _showSnackBar('Stop current track first');
+      return;
+    }
+
+    await _trackingApi.startTracking();
+    setState(() {
+      _isTracking = true;
+    });
   }
 
   Future<void> _onStopTracking() async {
-    if (await _trackingApi.isTracking() ?? false) {
-      _trackingApi.stopTracking();
+    final isTracking = await _trackingApi.isTracking() ?? false;
+
+    if (isTracking) {
+      await _trackingApi.stopTracking();
       setState(() {
         _isTracking = false;
       });
@@ -225,8 +236,23 @@ class _TitleScreenState extends State<TitleScreen> {
     }
   }
 
+  void _onLocationChangedResult(TrackLocation location) {
+    print('location latitude: ${location.latitude}, longitude: ${location.longitude}');
+    setState(() {
+      _location = location;
+    });
+  }
+
   void _showSnackBar(String text) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  String _getCurrentLocation() {
+    if (_location != null) {
+      return 'Location: ${_location!.latitude}, ${_location!.longitude}';
+    } else {
+      return 'Location: null';
+    }
   }
 }
