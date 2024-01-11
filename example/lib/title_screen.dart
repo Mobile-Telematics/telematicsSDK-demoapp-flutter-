@@ -183,10 +183,13 @@ class _TitleScreenState extends State<TitleScreen> {
   Future<void> _onDisableSDK() async {
     if (_isManualTracking) {
       await _trackingApi.stopManualTracking();
+      _isManualTracking = false;
+    }
+
+    if (_isTracking) {
       if (Platform.isIOS) {
         await _trackingApi.setDisableTracking(value: true);
       }
-      _isManualTracking = false;
       _isTracking = false;
     }
 
@@ -198,10 +201,13 @@ class _TitleScreenState extends State<TitleScreen> {
   Future<void> _onForceDisableSDK() async {
     if (_isManualTracking) {
       await _trackingApi.stopManualTracking();
+      _isManualTracking = false;
+    }
+
+    if (_isTracking) {
       if (Platform.isIOS) {
         await _trackingApi.setDisableTracking(value: true);
       }
-      _isManualTracking = false;
       _isTracking = false;
     }
 
