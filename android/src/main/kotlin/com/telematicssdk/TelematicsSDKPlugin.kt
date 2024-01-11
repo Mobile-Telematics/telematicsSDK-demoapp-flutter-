@@ -82,8 +82,9 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "isTracking" -> isTracking(result)
             "setDeviceID" -> setDeviceID(call, result)
             "setEnableSdk" -> setEnableSdk(call, result)
-            "startTracking" -> startTracking(result)
-            "stopTracking" -> stopTracking(result)
+            "setDisableWithUpload" -> setDisableWithUpload(result)
+            "startManualTracking" -> startManualTracking(result)
+            "stopManualTracking" -> stopManualTracking(result)
             "showPermissionWizard" -> showPermissionWizard(call, result)
             "getTrackTags" -> getTrackTags(call, result)
             "addTrackTags" -> addTrackTags(call, result)
@@ -156,23 +157,22 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
     private fun setEnableSdk(call: MethodCall, result: Result) {
         val enable = call.argument<Boolean?>("enable") as Boolean
-        val uploadBeforeDisabling = call.argument<Boolean?>("uploadBeforeDisabling") as Boolean
-
-        if (!enable && uploadBeforeDisabling) {
-            api.setDisableWithUpload()
-        } else {
-            api.setEnableSdk(enable)
-        }
+        api.setEnableSdk(enable)
         result.success(null)
     }
 
-    private fun startTracking(result: Result) {
+    private fun setDisableWithUpload(result: Result) {
+        api.setDisableWithUpload()
+        result.success(null)
+    }
+
+    private fun startManualTracking(result: Result) {
         val startResult = api.startTracking()
 
         result.success(startResult)
     }
 
-    private fun stopTracking(result: Result) {
+    private fun stopManualTracking(result: Result) {
         val stopResult = api.stopTracking()
 
         result.success(stopResult)

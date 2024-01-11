@@ -12,6 +12,7 @@ dependencies:
 
   telematics_sdk:
     path: ../
+  shared_preferences: ^2.2.2
 
 flutter:
   uses-material-design: true

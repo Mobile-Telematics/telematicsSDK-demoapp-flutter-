@@ -50,10 +50,14 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             setDeviceID(call, result: result)
         case "setEnableSdk":
             setEnableSdk(call, result: result)
-        case "startTracking":
-            startTracking(result)
-        case "stopTracking":
-            stopTracking(result)
+        case "setDisableWithUpload":
+            setDisableWithUpload(result)
+         case "setDisableTracking":
+            setDisableTracking(call, result: result)
+        case "startManualTracking":
+            startManualTracking(result)
+        case "stopManualTracking":
+            stopManualTracking(result)
         case "showPermissionWizard":
             showPermissionWizard(call, result)
         case "setAggressiveHeartbeats":
@@ -154,27 +158,32 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     private func setEnableSdk(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let enable = args["enable"] as! Bool
-        let uploadBeforeDisabling = args["uploadBeforeDisabling"] as! Bool
         
-        if !enable && uploadBeforeDisabling {
-            RPEntry.instance().setDisableWithUpload()
-        } else {
-            RPEntry.instance().setEnableSdk(enable)
-        }
-        
+        RPEntry.instance().setEnableSdk(enable)
         result(nil)
     }
     
-    private func startTracking(_ result: @escaping FlutterResult) {
-        RPEntry.instance().disableTracking = false
-        
+    private func setDisableWithUpload(_ result: @escaping FlutterResult) {
+        RPEntry.instance().setDisableWithUpload()
         result(nil)
     }
     
-    private func stopTracking(_ result: @escaping FlutterResult) {
-        RPEntry.instance().disableTracking = true
+    private func setDisableTracking(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let value = args["value"] as! Bool
         
+        RPEntry.instance().disableTracking = value
         result(nil)
+    }
+
+    private func startManualTracking(_ result: @escaping FlutterResult) {
+         RPTracker.instance().startTracking()
+         result(nil)
+    }
+
+    private func stopManualTracking(_ result: @escaping FlutterResult) {
+         RPTracker.instance().stopTracking()
+         result(nil)
     }
     
     private func showPermissionWizard(_ call: FlutterMethodCall, _ result: @escaping FlutterReply) {

@@ -114,22 +114,25 @@ class TrackingApi {
 
   Future<bool?> isTracking() => _channel.invokeMethod('isTracking');
 
-  /// If [enable] set to `false` and [uploadBeforeDisabling] is `true`,
-  /// SDK will wait until all tracks will be uploaded and only after that
-  /// it will be disabled. Otherwise SDK will be just enabled or disabled
+  ///SDK will be just enabled or disabled
   /// depending on [enable] value.
   Future<void> setEnableSdk({
-    required bool enable,
-    bool uploadBeforeDisabling = false,
+    required bool enable
   }) =>
       _channel.invokeMethod('setEnableSdk', {
-        'enable': enable,
-        'uploadBeforeDisabling': uploadBeforeDisabling,
+        'enable': enable
       });
 
-  Future<bool?> startTracking() => _channel.invokeMethod('startTracking');
+  /// Disable SDK with enforced trip uploading
+  /// using this method, SDK will enforce trip uploading and then will be disabled.
+  Future<void> setDisableWithUpload() => _channel.invokeMethod('setDisableWithUpload');
 
-  Future<bool?> stopTracking() => _channel.invokeMethod('stopTracking');
+  Future<bool?> setDisableTracking({required bool value}) =>
+      _channel.invokeMethod('setDisableTracking', {'value': value});
+
+  Future<bool?> startManualTracking() => _channel.invokeMethod('startManualTracking');
+
+  Future<bool?> stopManualTracking() => _channel.invokeMethod('stopManualTracking');
 
   /// `SDK can work in two modes`:
   /// `Aggressive` - heartbeats are sent every 20 minutes and SDK never sleeps.

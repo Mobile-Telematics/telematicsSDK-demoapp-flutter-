@@ -1,11 +1,10 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:telematics_sdk/telematics_sdk.dart';
-
-/// Unique user device token
-const String virtualDeviceToken = '';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _sizedBoxSpace = SizedBox(height: 24);
 
@@ -23,30 +22,42 @@ class _TitleScreenState extends State<TitleScreen> {
   late StreamSubscription<bool> _onLowerPower;
   late StreamSubscription<TrackLocation> _onLocationChanged;
 
-  var _deviceId = virtualDeviceToken;
+  var _deviceId = '';
   var _isSdkEnabled = false;
   var _isAllRequiredPermissionsGranted = false;
   var _isTracking = false;
+  var _isManualTracking = false;
   TrackLocation? _location;
+
+  late final SharedPreferences _prefs;
+
+  final _tokenEditingController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-
     _onPermissionWizardStateChanged =
         _trackingApi.onPermissionWizardClose.listen(_onPermissionWizardResult);
     _onLowerPower = _trackingApi.lowerPowerMode.listen(_onLowPowerResult);
     _onLocationChanged = _trackingApi.locationChanged.listen(_onLocationChangedResult);
-
+    _tokenEditingController.addListener(_onDeviceTokenChanged);
     initPlatformState();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
+    _prefs = await SharedPreferences.getInstance();
+
+    final virtualDeviceToken = _prefs.getString('virtualDeviceToken');
+
+    if (virtualDeviceToken != null && virtualDeviceToken.isNotEmpty) {
+      _deviceId = virtualDeviceToken;
+      _tokenEditingController.text = _deviceId;
+    }
+
     _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
     _isAllRequiredPermissionsGranted =
         await _trackingApi.isAllRequiredPermissionsAndSensorsGranted() ?? false;
-    _isTracking = await _trackingApi.isTracking() ?? false;
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
@@ -64,84 +75,67 @@ class _TitleScreenState extends State<TitleScreen> {
       appBar: AppBar(
         title: const Text('TelematicsSDK_demo'),
       ),
-      body: Stack(children: [
-        ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text('SDK status: ${_isSdkEnabled ? 'Enable' : 'Disable'}'),
-              Text(
-                'Permissions: ${_isAllRequiredPermissionsGranted ? 'Granted' : 'Not granted'}',
-              ),
-              Text('Tracking: ${_isTracking ? 'Started' : 'Not stated'}'),
-              Text(_getCurrentLocation()),
-            ]),
-        Center(
-            child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          children: [
-            TextFormField(
-              initialValue: _deviceId,
-              decoration: const InputDecoration(
-                hintText: 'virtual device token',
-                labelText: 'virtual device token',
-              ),
-              keyboardType: TextInputType.text,
-              textInputAction: TextInputAction.done,
-              maxLengthEnforcement: MaxLengthEnforcement.none,
-              onChanged: (value) {
-                setState(() {
-                  _deviceId = value;
-                });
-              },
-              onFieldSubmitted: (_) {
-                FocusScope.of(context).requestFocus(FocusNode());
-              },
+      body: ListView(
+        shrinkWrap: false,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          Text('SDK status: ${_isSdkEnabled ? 'Enabled' : 'Disabled'}'),
+          Text(
+            'Permissions: ${_isAllRequiredPermissionsGranted ? 'Granted' : 'Not granted'}',
+          ),
+          (Platform.isIOS) ? Text('Tracking: ${_isTracking ? 'Enabled' : 'Disabled'}') : SizedBox.shrink(),
+          Text('Manual Tracking: ${_isManualTracking ? 'Started' : 'Not stated'}'),
+          Text(_getCurrentLocation()),
+          TextFormField(
+            controller: _tokenEditingController,
+            decoration: const InputDecoration(
+              labelText: 'Virtual device token',
             ),
-            ElevatedButton(
-              onPressed: !_isSdkEnabled ? _onEnableSDK : null,
-              child: const Text('Enable SDK'),
-            ),
-            ElevatedButton(
-              onPressed: _isSdkEnabled ? _onDisableSDK : null,
-              child: const Text('Disable SDK'),
-            ),
-            _sizedBoxSpace,
-            ElevatedButton(
-              onPressed: () async {
-                if (!_isAllRequiredPermissionsGranted) {
-                  _trackingApi.showPermissionWizard(
-                    enableAggressivePermissionsWizard: false,
-                    enableAggressivePermissionsWizardPage: true,
-                  );
-                } else {
-                  _showSnackBar('All permissions are already granted');
-                }
-              },
-              child: const Text('Start Permission Wizard'),
-            ),
-            _sizedBoxSpace,
-            ElevatedButton(
-              onPressed: !_isTracking ? _onStartTracking : null,
-              child: const Text('Start tracking manually'),
-            ),
-            ElevatedButton(
-              onPressed: _isTracking ? _onStopTracking : null,
-              child: const Text('Stop tracking manually'),
-            ),
-            // _sizedBoxSpace,
-            // ElevatedButton(
-            //   onPressed: () async {
-            //     if (!(await _trackingApi.isSdkEnabled() ?? false)) {
-            //       _showSnackBar('Enable SDK first');
-            //     } else {}
-            //   },
-            //   child: const Text('Dashboard'),
-            // ),
-          ],
-        )),
-      ]),
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+            maxLengthEnforcement: MaxLengthEnforcement.none,
+            onFieldSubmitted: (_) {
+              FocusScope.of(context).requestFocus(FocusNode());
+            },
+          ),
+          ElevatedButton(
+            onPressed: !_isSdkEnabled ? _onEnableSDK : null,
+            child: const Text('Enable SDK'),
+          ),
+          ElevatedButton(
+            onPressed: _isSdkEnabled ? _onDisableSDK : null,
+            child: const Text('Disable SDK'),
+          ),
+          ElevatedButton(
+            onPressed: _isSdkEnabled ? _onForceDisableSDK : null,
+            child: const Text('Force Disable SDK with upload'),
+          ),
+          _sizedBoxSpace,
+          ElevatedButton(
+            onPressed: () async {
+              await _onPermissionsSDK();
+            },
+            child: const Text('Start Permission Wizard'),
+          ),
+          _sizedBoxSpace,
+          (Platform.isIOS) ? ElevatedButton(
+            onPressed: !_isTracking ? _onTrackingEnabled : null,
+            child: const Text('Enable Tracking'),
+          ) : SizedBox.shrink(),
+          (Platform.isIOS) ? ElevatedButton(
+            onPressed: _isTracking ? _onTrackingDisabled : null,
+            child: const Text('Disable Tracking'),
+          ) : SizedBox.shrink(),
+          ElevatedButton(
+            onPressed: !_isManualTracking ? _onStartManualTracking : null,
+            child: const Text('Start tracking manually'),
+          ),
+          ElevatedButton(
+            onPressed: _isManualTracking ? _onStopManualTracking : null,
+            child: const Text('Stop tracking manually'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -150,7 +144,20 @@ class _TitleScreenState extends State<TitleScreen> {
     _onPermissionWizardStateChanged.cancel();
     _onLowerPower.cancel();
     _onLocationChanged.cancel();
+    _tokenEditingController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onDeviceTokenChanged() async {
+    final value = _tokenEditingController.text;
+    if (value.isNotEmpty) {
+      await _prefs.setString('virtualDeviceToken', value);
+    } else {
+      await _prefs.remove('virtualDeviceToken');
+    }
+
+    _deviceId = value;
+    setState(() {});
   }
 
   Future<void> _onEnableSDK() async {
@@ -161,19 +168,57 @@ class _TitleScreenState extends State<TitleScreen> {
     } else {
       await _trackingApi.setDeviceID(deviceId: _deviceId);
       await _trackingApi.setEnableSdk(enable: true);
-      await _trackingApi.enableHF(value: true);
-      await _trackingApi.setAggressiveHeartbeats(value: true);
-      await _trackingApi.stopTracking();
+
+      if (Platform.isIOS) {
+        await _trackingApi.enableHF(value: true);
+        await _trackingApi.setAggressiveHeartbeats(value: true);
+        await _trackingApi.setDisableTracking(value: true);
+      }
+
       _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
       setState(() {});
     }
   }
 
   Future<void> _onDisableSDK() async {
+    if (_isManualTracking) {
+      await _trackingApi.stopManualTracking();
+      if (Platform.isIOS) {
+        await _trackingApi.setDisableTracking(value: true);
+      }
+      _isManualTracking = false;
+      _isTracking = false;
+    }
+
     await _trackingApi.setEnableSdk(enable: false);
-    await _trackingApi.clearDeviceID();
     _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
     setState(() {});
+  }
+
+  Future<void> _onForceDisableSDK() async {
+    if (_isManualTracking) {
+      await _trackingApi.stopManualTracking();
+      if (Platform.isIOS) {
+        await _trackingApi.setDisableTracking(value: true);
+      }
+      _isManualTracking = false;
+      _isTracking = false;
+    }
+
+    await _trackingApi.setDisableWithUpload();
+    _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
+    setState(() {});
+  }
+
+  Future<void> _onPermissionsSDK() async {
+    if (!_isAllRequiredPermissionsGranted) {
+      _trackingApi.showPermissionWizard(
+        enableAggressivePermissionsWizard: false,
+        enableAggressivePermissionsWizardPage: true,
+      );
+    } else {
+      _showSnackBar('All permissions are already granted');
+    }
   }
 
   void _onPermissionWizardResult(PermissionWizardResult result) {
@@ -194,7 +239,7 @@ class _TitleScreenState extends State<TitleScreen> {
     _showSnackBar(_wizardResultMapping[result] ?? '');
   }
 
-  Future<void> _onStartTracking() async {
+  Future<void> _onTrackingEnabled() async {
     final isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
 
     if (!isSdkEnabled) {
@@ -202,30 +247,60 @@ class _TitleScreenState extends State<TitleScreen> {
       return;
     }
 
-    final isTracking = await _trackingApi.isTracking() ?? false;
+    await _trackingApi.setDisableTracking(value: false);
 
-    if (isTracking) {
-      _showSnackBar('Stop current track first');
-      return;
-    }
-
-    await _trackingApi.startTracking();
     setState(() {
       _isTracking = true;
     });
   }
 
-  Future<void> _onStopTracking() async {
-    final isTracking = await _trackingApi.isTracking() ?? false;
-
-    if (isTracking) {
-      await _trackingApi.stopTracking();
-      setState(() {
-        _isTracking = false;
-      });
-    } else {
-      _showSnackBar('Start tracking first');
+  Future<void> _onTrackingDisabled() async {
+    if (_isManualTracking) {
+      await _trackingApi.stopManualTracking();
     }
+
+    await _trackingApi.setDisableTracking(value: true);
+
+    setState(() {
+      _isTracking = false;
+      _isManualTracking = false;
+    });
+  }
+
+  Future<void> _onStartManualTracking() async {
+    final isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
+
+    if (!isSdkEnabled) {
+      _showSnackBar('Enable SDK first');
+      return;
+    }
+
+    if (!_isTracking && Platform.isIOS) {
+      _showSnackBar('Enable tracking first');
+      return;
+    }
+
+    if (_isManualTracking) {
+      _showSnackBar('Stop current track first');
+      return;
+    }
+
+    await _trackingApi.startManualTracking();
+    setState(() {
+      _isManualTracking = true;
+    });
+  }
+
+  Future<void> _onStopManualTracking() async {
+    if (!_isManualTracking) {
+      _showSnackBar('Start tracking first');
+      return;
+    }
+
+    await _trackingApi.stopManualTracking();
+    setState(() {
+      _isManualTracking = false;
+    });
   }
 
   void _onLowPowerResult(bool isLowPower) {
