@@ -59,6 +59,8 @@ class _TitleScreenState extends State<TitleScreen> {
     _isAllRequiredPermissionsGranted =
         await _trackingApi.isAllRequiredPermissionsAndSensorsGranted() ?? false;
 
+    _isTracking = _prefs.getBool('isTracking') ?? false;
+
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
@@ -98,13 +100,22 @@ class _TitleScreenState extends State<TitleScreen> {
               FocusScope.of(context).requestFocus(FocusNode());
             },
           ),
-          ElevatedButton(
-            onPressed: !_isSdkEnabled ? _onEnableSDK : null,
-            child: const Text('Enable SDK'),
-          ),
-          ElevatedButton(
-            onPressed: _isSdkEnabled ? _onDisableSDK : null,
-            child: const Text('Disable SDK'),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: !_isSdkEnabled ? _onEnableSDK : null,
+                  child: const Text('Enable SDK'),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _isSdkEnabled ? _onDisableSDK : null,
+                  child: const Text('Disable SDK'),
+                ),
+              ),
+            ],
           ),
           ElevatedButton(
             onPressed: _isSdkEnabled ? _onForceDisableSDK : null,
@@ -118,21 +129,45 @@ class _TitleScreenState extends State<TitleScreen> {
             child: const Text('Start Permission Wizard'),
           ),
           _sizedBoxSpace,
-          (Platform.isIOS) ? ElevatedButton(
-            onPressed: !_isTracking ? _onTrackingEnabled : null,
-            child: const Text('Enable Tracking'),
+          (Platform.isIOS) ? Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: !_isTracking ? _onTrackingEnabled : null,
+                  child: const Text('Enable Tracking'),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _isTracking ? _onTrackingDisabled : null,
+                  child: const Text('Disable Tracking'),
+                ),
+              ),
+            ],
           ) : SizedBox.shrink(),
-          (Platform.isIOS) ? ElevatedButton(
-            onPressed: _isTracking ? _onTrackingDisabled : null,
-            child: const Text('Disable Tracking'),
-          ) : SizedBox.shrink(),
-          ElevatedButton(
-            onPressed: !_isManualTracking ? _onStartManualTracking : null,
-            child: const Text('Start tracking manually'),
-          ),
-          ElevatedButton(
-            onPressed: _isManualTracking ? _onStopManualTracking : null,
-            child: const Text('Stop tracking manually'),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: !_isManualTracking ? _onStartManualTracking : null,
+                  child: const Text(
+                    'Start tracking manually',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _isManualTracking ? _onStopManualTracking : null,
+                  child: const Text(
+                    'Stop tracking manually',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -190,6 +225,7 @@ class _TitleScreenState extends State<TitleScreen> {
       if (Platform.isIOS) {
         await _trackingApi.setDisableTracking(value: true);
       }
+      _prefs.setBool('isTracking', false);
       _isTracking = false;
     }
 
@@ -208,6 +244,7 @@ class _TitleScreenState extends State<TitleScreen> {
       if (Platform.isIOS) {
         await _trackingApi.setDisableTracking(value: true);
       }
+      _prefs.setBool('isTracking', false);
       _isTracking = false;
     }
 
@@ -254,6 +291,7 @@ class _TitleScreenState extends State<TitleScreen> {
     }
 
     await _trackingApi.setDisableTracking(value: false);
+    _prefs.setBool('isTracking', true);
 
     setState(() {
       _isTracking = true;
@@ -266,6 +304,7 @@ class _TitleScreenState extends State<TitleScreen> {
     }
 
     await _trackingApi.setDisableTracking(value: true);
+    _prefs.setBool('isTracking', false);
 
     setState(() {
       _isTracking = false;
