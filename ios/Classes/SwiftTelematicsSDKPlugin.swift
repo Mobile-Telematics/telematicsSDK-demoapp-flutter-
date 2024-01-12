@@ -106,6 +106,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             getRTLDData(result)
         case "getCurrentSpeed":
             getCurrentSpeed(result)
+        case "getTracks":
+            getTracks(call, result)
         default:
             print("not implemented")
         }
@@ -294,7 +296,36 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         self.channel?.invokeMethod("onRtldCollectedData", arguments: state)
     }
     
-    
+    // MARK: - Tracks
+    private func getTracks(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let offset = args["offset"] as! Int
+        let limit = args["limit"] as! Int
+        let startDate = args["startDate"] as? String
+        let endDate = args["endDate"] as? String
+        
+        let utcISODateFormatter = ISO8601DateFormatter()
+        
+        RPEntry.instance().api.getTracks(
+            UInt(offset),
+            limit: UInt(limit),
+            start: utcISODateFormatter.date(from: startDate ?? ""),
+            end: utcISODateFormatter.date(from: endDate ?? "")
+        ) { response, error in
+            if let error {
+                result(FlutterError(code: FlutterPluginCode.failure,
+                                    message: error.localizedDescription,
+                                    details: nil)
+                )
+                return
+            }
+            
+            guard let feed = response as? RPFeed else {
+                return
+            }
+            
+        }
+    }
     
     //MARK: - Track tags
     

@@ -206,8 +206,8 @@ class TrackingApi {
 
   //TO DO - add getTracks function to SwiftTelematicsSDKPlugin
   Future<Iterable<TrackProcessed>?> getTracks({
-    required UnsignedInt offset,
-    required UnsignedInt limit,
+    required int offset,
+    required int limit,
     DateTime? startDate,
     DateTime? endDate
   }) => _channel.invokeMethod<Iterable<String>>('getTracks', {
