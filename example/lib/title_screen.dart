@@ -27,6 +27,7 @@ class _TitleScreenState extends State<TitleScreen> {
   var _isAllRequiredPermissionsGranted = false;
   var _isTracking = false;
   var _isManualTracking = false;
+  var _isAggressiveHeartbeats = false;
   TrackLocation? _location;
 
   late final SharedPreferences _prefs;
@@ -60,6 +61,7 @@ class _TitleScreenState extends State<TitleScreen> {
         await _trackingApi.isAllRequiredPermissionsAndSensorsGranted() ?? false;
 
     _isTracking = _prefs.getBool('isTracking') ?? false;
+    _isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeat() ?? false;
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
@@ -123,7 +125,7 @@ class _TitleScreenState extends State<TitleScreen> {
           ),
           ElevatedButton(
             onPressed: !_isSdkEnabled && _deviceId.isNotEmpty ? _onLogout : null,
-            child: const Text('Log out'),
+            child: const Text('Clear Device Token'),
           ),
           _sizedBoxSpace,
           ElevatedButton(
@@ -133,6 +135,17 @@ class _TitleScreenState extends State<TitleScreen> {
             child: const Text('Start Permission Wizard'),
           ),
           _sizedBoxSpace,
+          (Platform.isIOS) ? Row(
+            children: [
+              Expanded(
+                child: const Text('Aggressive Heartbeats'),
+              ),
+              Switch.adaptive(
+                  value: _isAggressiveHeartbeats,
+                  onChanged: _isSdkEnabled ? _onAggressiveHeartbeats : null
+              )
+            ],
+          ) : SizedBox.shrink(),
           (Platform.isIOS) ? Row(
             children: [
               Expanded(
@@ -210,7 +223,6 @@ class _TitleScreenState extends State<TitleScreen> {
 
       if (Platform.isIOS) {
         await _trackingApi.enableHF(value: true);
-        await _trackingApi.setAggressiveHeartbeats(value: true);
         await _trackingApi.setDisableTracking(value: true);
       }
 
@@ -260,6 +272,12 @@ class _TitleScreenState extends State<TitleScreen> {
   Future<void> _onLogout() async {
     _tokenEditingController.text = '';
     await _trackingApi.clearDeviceID();
+  }
+
+  Future<void> _onAggressiveHeartbeats(bool value) async {
+    await _trackingApi.setAggressiveHeartbeats(value: value);
+    _isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeat() ?? false;
+    setState(() {});
   }
 
   Future<void> _onPermissionsSDK() async {
