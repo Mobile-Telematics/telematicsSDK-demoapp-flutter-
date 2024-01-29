@@ -130,6 +130,8 @@ class TrackingApi {
   Future<bool?> setDisableTracking({required bool value}) =>
       _channel.invokeMethod('setDisableTracking', {'value': value});
 
+  Future<bool?> isDisableTracking() => _channel.invokeMethod('isDisableTracking');
+
   Future<bool?> startManualTracking() => _channel.invokeMethod('startManualTracking');
 
   Future<bool?> stopManualTracking() => _channel.invokeMethod('stopManualTracking');

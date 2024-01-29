@@ -52,6 +52,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             setEnableSdk(call, result: result)
         case "setDisableWithUpload":
             setDisableWithUpload(result)
+        case "isDisableTracking":
+            isDisableTracking(result: result)
          case "setDisableTracking":
             setDisableTracking(call, result: result)
         case "startManualTracking":
@@ -176,6 +178,10 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         
         RPEntry.instance().disableTracking = value
         result(nil)
+    }
+    
+    private func isDisableTracking(result: @escaping FlutterResult) {
+        result(RPEntry.instance().disableTracking)
     }
 
     private func startManualTracking(_ result: @escaping FlutterResult) {

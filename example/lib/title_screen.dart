@@ -25,7 +25,7 @@ class _TitleScreenState extends State<TitleScreen> {
   var _deviceId = '';
   var _isSdkEnabled = false;
   var _isAllRequiredPermissionsGranted = false;
-  var _isTracking = false;
+  var _isTracking = true;
   var _isManualTracking = false;
   var _isAggressiveHeartbeats = false;
   TrackLocation? _location;
@@ -60,7 +60,8 @@ class _TitleScreenState extends State<TitleScreen> {
     _isAllRequiredPermissionsGranted =
         await _trackingApi.isAllRequiredPermissionsAndSensorsGranted() ?? false;
 
-    _isTracking = _prefs.getBool('isTracking') ?? false;
+    final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+    _isTracking = !disableTracking;
     _isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeat() ?? false;
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -87,7 +88,7 @@ class _TitleScreenState extends State<TitleScreen> {
           Text(
             'Permissions: ${_isAllRequiredPermissionsGranted ? 'Granted' : 'Not granted'}',
           ),
-          (Platform.isIOS) ? Text('Tracking: ${_isTracking ? 'Enabled' : 'Disabled'}') : SizedBox.shrink(),
+          (Platform.isIOS) ? Text('Tracking: ${_isSdkEnabled && _isTracking ? 'Enabled' : 'Disabled'}') : SizedBox.shrink(),
           Text('Manual Tracking: ${_isManualTracking ? 'Started' : 'Not stated'}'),
           Text(_getCurrentLocation()),
           TextFormField(
@@ -150,14 +151,14 @@ class _TitleScreenState extends State<TitleScreen> {
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: !_isTracking ? _onTrackingEnabled : null,
+                  onPressed: _isSdkEnabled && !_isTracking ? _onTrackingEnabled : null,
                   child: const Text('Enable Tracking'),
                 ),
               ),
               SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: _isTracking ? _onTrackingDisabled : null,
+                  onPressed: _isSdkEnabled && _isTracking ? _onTrackingDisabled : null,
                   child: const Text('Disable Tracking'),
                 ),
               ),
@@ -223,10 +224,12 @@ class _TitleScreenState extends State<TitleScreen> {
 
       if (Platform.isIOS) {
         await _trackingApi.enableHF(value: true);
-        await _trackingApi.setDisableTracking(value: true);
       }
 
       _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
+      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+      _isTracking = !disableTracking;
+
       setState(() {});
     }
   }
@@ -241,8 +244,8 @@ class _TitleScreenState extends State<TitleScreen> {
       if (Platform.isIOS) {
         await _trackingApi.setDisableTracking(value: true);
       }
-      _prefs.setBool('isTracking', false);
-      _isTracking = false;
+      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+      _isTracking = !disableTracking;
     }
 
     await _trackingApi.setEnableSdk(enable: false);
@@ -260,8 +263,8 @@ class _TitleScreenState extends State<TitleScreen> {
       if (Platform.isIOS) {
         await _trackingApi.setDisableTracking(value: true);
       }
-      _prefs.setBool('isTracking', false);
-      _isTracking = false;
+      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+      _isTracking = !disableTracking;
     }
 
     await _trackingApi.setDisableWithUpload();
@@ -318,10 +321,10 @@ class _TitleScreenState extends State<TitleScreen> {
     }
 
     await _trackingApi.setDisableTracking(value: false);
-    _prefs.setBool('isTracking', true);
+    final disableTracking = await _trackingApi.isDisableTracking() ?? false;
 
     setState(() {
-      _isTracking = true;
+      _isTracking = !disableTracking;
     });
   }
 
@@ -331,10 +334,10 @@ class _TitleScreenState extends State<TitleScreen> {
     }
 
     await _trackingApi.setDisableTracking(value: true);
-    _prefs.setBool('isTracking', false);
+    final disableTracking = await _trackingApi.isDisableTracking() ?? false;
 
     setState(() {
-      _isTracking = false;
+      _isTracking = !disableTracking;
       _isManualTracking = false;
     });
   }
