@@ -3,7 +3,7 @@ version '2.0-SNAPSHOT'
 
 buildscript {
     ext.kotlin_version = '1.9.0'
-    ext.raxel_tracking = '2.2.257'
+    ext.raxel_tracking = '2.2.259'
     repositories {
         google()
         jcenter()
@@ -11,7 +11,7 @@ buildscript {
 
     dependencies {
         //noinspection GradleDependency
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -30,8 +30,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 33
-
+    compileSdkVersion 34
+    namespace "com.telematicssdk"
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
@@ -41,6 +41,11 @@ android {
     }
     lintOptions {
         disable 'InvalidPackage'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
