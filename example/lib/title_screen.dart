@@ -60,9 +60,11 @@ class _TitleScreenState extends State<TitleScreen> {
     _isAllRequiredPermissionsGranted =
         await _trackingApi.isAllRequiredPermissionsAndSensorsGranted() ?? false;
 
-    final disableTracking = await _trackingApi.isDisableTracking() ?? false;
-    _isTracking = !disableTracking;
-    _isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeat() ?? false;
+    if (Platform.isIOS) {
+      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+      _isTracking = !disableTracking;
+      _isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeat() ?? false;
+    }
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
@@ -221,14 +223,13 @@ class _TitleScreenState extends State<TitleScreen> {
     } else {
       await _trackingApi.setDeviceID(deviceId: _deviceId);
       await _trackingApi.setEnableSdk(enable: true);
-
-      if (Platform.isIOS) {
-        await _trackingApi.enableHF(value: true);
-      }
+      await _trackingApi.enableHF(value: true);
 
       _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
-      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
-      _isTracking = !disableTracking;
+      if (Platform.isIOS) {
+        final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+        _isTracking = !disableTracking;
+      }
 
       setState(() {});
     }
@@ -243,9 +244,9 @@ class _TitleScreenState extends State<TitleScreen> {
     if (_isTracking) {
       if (Platform.isIOS) {
         await _trackingApi.setDisableTracking(value: true);
+        final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+        _isTracking = !disableTracking;
       }
-      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
-      _isTracking = !disableTracking;
     }
 
     await _trackingApi.setEnableSdk(enable: false);
@@ -262,9 +263,9 @@ class _TitleScreenState extends State<TitleScreen> {
     if (_isTracking) {
       if (Platform.isIOS) {
         await _trackingApi.setDisableTracking(value: true);
+        final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+        _isTracking = !disableTracking;
       }
-      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
-      _isTracking = !disableTracking;
     }
 
     await _trackingApi.setDisableWithUpload();
