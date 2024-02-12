@@ -1,7 +1,7 @@
 name: telematics_sdk_example
 description: Demonstrates how to use the telematics_sdk plugin.
 publish_to: none
-version: 0.0.1+6
+version: 0.0.1+7
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
