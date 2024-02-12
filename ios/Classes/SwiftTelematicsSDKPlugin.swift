@@ -216,30 +216,59 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     
     //MARK: - Lifecycle handlers
     
-    public func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String, completionHandler: @escaping () -> Void) {
-        RPEntry.application(application, handleEventsForBackgroundURLSession: identifier, completionHandler: completionHandler)
+    public func application(
+        _ application: UIApplication,
+        handleEventsForBackgroundURLSession identifier: String,
+        completionHandler: @escaping () -> Void
+    ) -> Bool {
+        RPEntry.application(
+            application,
+            handleEventsForBackgroundURLSession: identifier,
+            completionHandler: completionHandler
+        )
+        return true
     }
     
-    public func applicationDidReceiveMemoryWarning(_ application: UIApplication) {
-        RPEntry.applicationDidReceiveMemoryWarning(application)
+    public func applicationDidReceiveMemoryWarning(
+        _ application: UIApplication
+    ) {
+        RPEntry.applicationDidReceiveMemoryWarning(
+            application
+        )
     }
     
-    public func applicationWillTerminate(_ application: UIApplication) {
-        RPEntry.applicationWillTerminate(application)
+    public func applicationWillTerminate(
+        _ application: UIApplication
+    ) {
+        RPEntry.applicationWillTerminate(
+            application
+        )
     }
     
-    public func applicationDidEnterBackground(_ application: UIApplication) {
-        RPEntry.applicationDidEnterBackground(application)
+    public func applicationDidEnterBackground(
+        _ application: UIApplication
+    ) {
+        RPEntry.applicationDidEnterBackground(
+            application
+        )
     }
     
-    public func applicationDidBecomeActive(_ application: UIApplication) {
-        RPEntry.applicationDidBecomeActive(application)
+    public func applicationDidBecomeActive(
+        _ application: UIApplication
+    ) {
+        RPEntry.applicationDidBecomeActive(
+            application
+        )
     }
     
-    public func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+    public func application(
+        _ application: UIApplication,
+        performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) -> Bool {
         RPEntry.application(application) {
             completionHandler(.newData)
         }
+        return true
     }
     
     //MARK: - Delegate callbacks
