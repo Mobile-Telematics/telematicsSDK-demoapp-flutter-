@@ -71,6 +71,9 @@ add network permissions
     <application
             android:name=".App">
         ...
+       <activity
+            android:name=".MainActivity"
+            android:exported="true"
     </application>
 
     ```
@@ -80,7 +83,7 @@ add network permissions
     ```groovy
     dependencies {
         //...
-        implementation "com.telematicssdk:tracking: 2.2.253"
+        implementation "com.telematicssdk:tracking: 2.2.257"
     }
     ```
 
