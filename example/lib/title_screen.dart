@@ -222,14 +222,17 @@ class _TitleScreenState extends State<TitleScreen> {
       _showSnackBar('Please grant all required permissions');
     } else {
       await _trackingApi.setDeviceID(deviceId: _deviceId);
+
+      if (Platform.isIOS) {
+        await _trackingApi.setDisableTracking(value: false);
+        final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+        _isTracking = !disableTracking;
+      }
+
       await _trackingApi.setEnableSdk(enable: true);
       await _trackingApi.enableHF(value: true);
 
       _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
-      if (Platform.isIOS) {
-        final disableTracking = await _trackingApi.isDisableTracking() ?? false;
-        _isTracking = !disableTracking;
-      }
 
       setState(() {});
     }
@@ -241,12 +244,10 @@ class _TitleScreenState extends State<TitleScreen> {
       _isManualTracking = false;
     }
 
-    if (_isTracking) {
-      if (Platform.isIOS) {
-        await _trackingApi.setDisableTracking(value: true);
-        final disableTracking = await _trackingApi.isDisableTracking() ?? false;
-        _isTracking = !disableTracking;
-      }
+    if (Platform.isIOS) {
+      await _trackingApi.setDisableTracking(value: true);
+      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+      _isTracking = !disableTracking;
     }
 
     await _trackingApi.setEnableSdk(enable: false);
@@ -260,12 +261,10 @@ class _TitleScreenState extends State<TitleScreen> {
       _isManualTracking = false;
     }
 
-    if (_isTracking) {
-      if (Platform.isIOS) {
-        await _trackingApi.setDisableTracking(value: true);
-        final disableTracking = await _trackingApi.isDisableTracking() ?? false;
-        _isTracking = !disableTracking;
-      }
+    if (Platform.isIOS) {
+      await _trackingApi.setDisableTracking(value: true);
+      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
+      _isTracking = !disableTracking;
     }
 
     await _trackingApi.setDisableWithUpload();
@@ -314,6 +313,9 @@ class _TitleScreenState extends State<TitleScreen> {
   }
 
   Future<void> _onTrackingEnabled() async {
+    if (!Platform.isIOS) {
+      return;
+    }
     final isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
 
     if (!isSdkEnabled) {
@@ -330,6 +332,9 @@ class _TitleScreenState extends State<TitleScreen> {
   }
 
   Future<void> _onTrackingDisabled() async {
+    if (!Platform.isIOS) {
+      return;
+    }
     if (_isManualTracking) {
       await _trackingApi.stopManualTracking();
     }

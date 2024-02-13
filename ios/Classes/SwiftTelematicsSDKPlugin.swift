@@ -177,7 +177,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         let value = args["value"] as! Bool
         
         RPEntry.instance().disableTracking = value
-        result(nil)
+        result(value)
     }
     
     private func isDisableTracking(result: @escaping FlutterResult) {

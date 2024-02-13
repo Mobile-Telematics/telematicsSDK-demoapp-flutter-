@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:telematics_sdk_example/title_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
