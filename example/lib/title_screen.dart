@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:io' show Platform;
-
+import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:telematics_sdk/telematics_sdk.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 const _sizedBoxSpace = SizedBox(height: 24);
 
@@ -30,8 +29,6 @@ class _TitleScreenState extends State<TitleScreen> {
   var _isAggressiveHeartbeats = false;
   TrackLocation? _location;
 
-  late final SharedPreferences _prefs;
-
   final _tokenEditingController = TextEditingController();
 
   @override
@@ -41,19 +38,18 @@ class _TitleScreenState extends State<TitleScreen> {
         _trackingApi.onPermissionWizardClose.listen(_onPermissionWizardResult);
     _onLowerPower = _trackingApi.lowerPowerMode.listen(_onLowPowerResult);
     _onLocationChanged = _trackingApi.locationChanged.listen(_onLocationChangedResult);
-    _tokenEditingController.addListener(_onDeviceTokenChanged);
     initPlatformState();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    _prefs = await SharedPreferences.getInstance();
-
-    final virtualDeviceToken = _prefs.getString('virtualDeviceToken');
+    final virtualDeviceToken = await _trackingApi.getDeviceId();
 
     if (virtualDeviceToken != null && virtualDeviceToken.isNotEmpty) {
       _deviceId = virtualDeviceToken;
       _tokenEditingController.text = _deviceId;
+    } else {
+      await _trackingApi.setEnableSdk(enable: false);
     }
 
     _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
@@ -99,9 +95,16 @@ class _TitleScreenState extends State<TitleScreen> {
               labelText: 'Virtual device token',
             ),
             keyboardType: TextInputType.text,
-            textInputAction: TextInputAction.done,
+            textInputAction: TextInputAction.go,
             maxLengthEnforcement: MaxLengthEnforcement.none,
-            onFieldSubmitted: (_) {
+            onFieldSubmitted: (token) {
+              try {
+                final uuid = Uuid.parse(token, validate: true);
+                _onDeviceTokenUpdated(token: token);
+              } on FormatException catch(e) {
+                _tokenEditingController.text = _deviceId;
+                _showSnackBar(e.message);
+              }
               FocusScope.of(context).requestFocus(FocusNode());
             },
           ),
@@ -199,20 +202,12 @@ class _TitleScreenState extends State<TitleScreen> {
     _onPermissionWizardStateChanged.cancel();
     _onLowerPower.cancel();
     _onLocationChanged.cancel();
-    _tokenEditingController.dispose();
     super.dispose();
   }
 
-  Future<void> _onDeviceTokenChanged() async {
-    final value = _tokenEditingController.text;
-    if (value.isNotEmpty) {
-      await _prefs.setString('virtualDeviceToken', value);
-    } else {
-      await _prefs.remove('virtualDeviceToken');
-    }
-
-    _deviceId = value;
-    setState(() {});
+  Future<void> _onDeviceTokenUpdated({required String token}) async {
+    _deviceId = token;
+    await _trackingApi.setDeviceID(deviceId: _deviceId);
   }
 
   Future<void> _onEnableSDK() async {
@@ -221,18 +216,16 @@ class _TitleScreenState extends State<TitleScreen> {
     } else if (!_isAllRequiredPermissionsGranted) {
       _showSnackBar('Please grant all required permissions');
     } else {
-      await _trackingApi.setDeviceID(deviceId: _deviceId);
+      await _trackingApi.setEnableSdk(enable: true);
+      await _trackingApi.enableHF(value: true);
+
+      _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
 
       if (Platform.isIOS) {
         await _trackingApi.setDisableTracking(value: false);
         final disableTracking = await _trackingApi.isDisableTracking() ?? false;
         _isTracking = !disableTracking;
       }
-
-      await _trackingApi.setEnableSdk(enable: true);
-      await _trackingApi.enableHF(value: true);
-
-      _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
 
       setState(() {});
     }
@@ -274,7 +267,9 @@ class _TitleScreenState extends State<TitleScreen> {
 
   Future<void> _onLogout() async {
     _tokenEditingController.text = '';
+    _deviceId = '';
     await _trackingApi.clearDeviceID();
+    setState(() {});
   }
 
   Future<void> _onAggressiveHeartbeats(bool value) async {
