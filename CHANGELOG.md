@@ -3,6 +3,8 @@
 ## 0.2.0
 
 * Migrate to dart 3+
+* Updated Android sdk version to 2.2.260
+* Updated iOS sdk version to 6.6.0
 
 ## 0.1.1
 
