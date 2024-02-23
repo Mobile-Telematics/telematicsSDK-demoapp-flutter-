@@ -80,7 +80,7 @@ add network permissions
     ```groovy
     dependencies {
         //...
-        implementation "com.telematicssdk:tracking: 2.2.253"
+        implementation "com.telematicssdk:tracking:2.2.260"
     }
     ```
 

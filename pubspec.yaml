@@ -1,5 +1,5 @@
 name: telematics_sdk
-version: 0.1.1
+version: 0.2.0
 description: A Flutter plugin for integration Telematics SDK in Android and iOS applications.
 homepage: https://docs.telematicssdk.com
 repository: https://github.com/Mobile-Telematics/telematicsSDK-demoapp-flutter-
@@ -14,8 +14,8 @@ dev_dependencies:
     sdk: flutter
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
-  flutter: ">=2.0.0"
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.7.0"
 
 flutter:
   plugin:

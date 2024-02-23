@@ -1,11 +1,10 @@
 name: telematics_sdk_example
 description: Demonstrates how to use the telematics_sdk plugin.
 publish_to: none
-version: 0.0.1
+version: 0.0.1+9
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
-  flutter: ">=2.0.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -13,6 +12,7 @@ dependencies:
 
   telematics_sdk:
     path: ../
+  uuid: ^4.3.2
 
 flutter:
   uses-material-design: true
