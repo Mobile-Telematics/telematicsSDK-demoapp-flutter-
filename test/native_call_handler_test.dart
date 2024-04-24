@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:telematics_sdk/telematics_sdk.dart';
 import 'package:telematics_sdk/src/native_call_handler.dart';
-import 'package:telematics_sdk/src/data/permission_wizard_result.dart';
 
 void main() {
   group('NativeCallHandler', () {
