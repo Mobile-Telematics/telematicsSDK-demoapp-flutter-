@@ -210,7 +210,6 @@ The detailed information about using Tags is available [here](https://docs.damoo
 
 **Remove all tags**
 ``` dart
-    String tag = 'TAG';
     await _trackingApi.removeAllFutureTrackTags();
 ```
 
