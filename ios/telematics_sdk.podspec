@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'telematics_sdk'
-  s.version          = '0.2.0'
+  s.version          = '0.2.1'
   s.summary          = 'A new flutter plugin project.'
   s.description      = <<-DESC
 A new flutter plugin project.
@@ -22,5 +22,5 @@ A new flutter plugin project.
   s.swift_version = '5.0'
 
   # Dependency
-  s.dependency 'RaxelPulse', '~> 6.0.0'
+  s.dependency 'RaxelPulse', '~> 6.0.1'
 end

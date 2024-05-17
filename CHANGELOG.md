@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+* Update Wrapper to support Flutter 3.22
+
 ## 0.2.0
 
 * Migrate to dart 3+

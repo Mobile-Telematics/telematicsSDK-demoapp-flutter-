@@ -251,6 +251,14 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         )
     }
     
+    public func applicationWillEnterForeground(
+        _ application: UIApplication
+    ) {
+        RPEntry.applicationWillEnterForeground(
+            application
+        )
+    }
+    
     public func application(
         _ application: UIApplication,
         performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
