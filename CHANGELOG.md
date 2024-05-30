@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+* Updated iOS sdk version to 6.0.2
+
 ## 0.2.1
 
 * Update Wrapper to support Flutter 3.22
@@ -8,7 +12,7 @@
 
 * Migrate to dart 3+
 * Updated Android sdk version to 2.2.260
-* Updated iOS sdk version to 6.6.0
+* Updated iOS sdk version to 6.0.0
 
 ## 0.1.1
 
