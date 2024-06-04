@@ -278,6 +278,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     
     /// Handle Location change and Events
     public func onLocationChanged(_ location: CLLocation!) {
+        guard let location else { return }
         let latitude = location.coordinate.latitude as Double
         let longitude = location.coordinate.longitude as Double
         let json: [String : Any?] = [
@@ -288,6 +289,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     }
     
     public func onNewEvents(_ events: NSMutableArray!) {  //TO DO
+        guard let events else { return }
         for item in events {
             if let theItem = item as? RPEventPoint {
                 

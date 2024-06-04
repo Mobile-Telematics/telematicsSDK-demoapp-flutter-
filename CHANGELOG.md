@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+* Updated iOS sdk version to 6.0.3
+
 ## 0.2.2
 
 * Updated iOS sdk version to 6.0.2
