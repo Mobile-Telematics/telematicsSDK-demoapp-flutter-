@@ -13,6 +13,8 @@ For commercial use, you need create a developer workspace in [DataHub](https://a
 
 ### Android
 
+#### Please draw attention that Android SDK supports Cradle 8+ versions only.
+
 #### AndroidManifest.xml
 
 add to file ./app/src/main/AndroidManifest.xml props:
@@ -42,6 +44,27 @@ add network permissions
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+...
+```
+
+#### build.gradle
+
+add to file ./app/build.gradle props:
+
+``` xml
+...
+    android {
+    ...
+        buildTypes {
+            release {
+                ...
+                shrinkResources false
+                minifyEnabled false
+                ...
+            }
+        }
+    ...
+    }
 ...
 ```
 
