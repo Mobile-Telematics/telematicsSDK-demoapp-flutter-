@@ -13,7 +13,7 @@ For commercial use, you need create a developer workspace in [DataHub](https://a
 
 ### Android
 
-#### Please draw attention that Android SDK supports Cradle 8+ versions only.
+#### Please draw attention that Android SDK supports Gradle 8+ versions only.
 
 #### AndroidManifest.xml
 
