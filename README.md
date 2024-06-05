@@ -49,10 +49,9 @@ add network permissions
 
 #### build.gradle
 
-add to file ./app/build.gradle props:
+add to file (module)/build.gradle props:
 
-``` xml
-...
+``` groovy
     android {
     ...
         buildTypes {
@@ -65,7 +64,6 @@ add to file ./app/build.gradle props:
         }
     ...
     }
-...
 ```
 
 #### Proguard
@@ -114,7 +112,7 @@ add to file ./app/build.gradle props:
 
     ```
 
-3. add Telematics SDK repository into (module)/gradle.build
+3. add Telematics SDK repository into (module)/build.gradle
 
     ```groovy
     dependencies {
