@@ -28,7 +28,7 @@ as shown below:
 <manifest
     xmlns:tools="http://schemas.android.com/tools">
     <application
-        tools:replace="android:label">
+        tools:replace="android:label,android:name">
         ...
     </application>
     ...
