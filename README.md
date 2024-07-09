@@ -117,7 +117,7 @@ add to file (module)/build.gradle props:
     ```groovy
     dependencies {
         //...
-        implementation "com.telematicssdk:tracking:2.2.260"
+        implementation "com.telematicssdk:tracking:2.2.262"
     }
     ```
 

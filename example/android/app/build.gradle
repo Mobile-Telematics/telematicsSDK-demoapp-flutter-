@@ -64,5 +64,5 @@ flutter {
 }
 
 dependencies {
-    implementation "com.telematicssdk:tracking:2.2.260"
+    implementation "com.telematicssdk:tracking:2.2.262"
 }

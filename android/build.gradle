@@ -3,7 +3,7 @@ version '2.0-SNAPSHOT'
 
 buildscript {
     ext.kotlin_version = '1.9.0'
-    ext.raxel_tracking = '2.2.260'
+    ext.raxel_tracking = '2.2.262'
     repositories {
         google()
         jcenter()
