@@ -194,14 +194,39 @@ final _trackingApi = TrackingApi();
     await _trackingApi.startManualTracking();
 ```
 
+**Manual start persistent tracking**
+``` dart
+    await _trackingApi.startManualPersistentTracking();
+```
+
+**Notes:**
+Persistent tracking ignores all stop tracking reasons and continues before 'stopTracking' method will be called. 
+Max persistent tracking duration is 10 hours.
+
 **Manual stop tracking**
 ``` dart
     await _trackingApi.stopManualTracking();
 ```
 
-**Permissions status**
+**Upload unsent trips**
 ``` dart
-    final isAllGranted = await _trackingApi.isAllRequiredPermissionsAndSensorsGranted();
+    await _trackingApi.uploadUnsentTrips();
+```
+
+**Get unsent trips**
+``` dart
+    final unsentTripsCount = await _trackingApi.getUnsentTripCount();
+```
+
+**Get unsent trips**
+``` dart
+    final unsentTripsCount = await _trackingApi.getUnsentTripCount();
+```
+
+**Send a custom heartbeat**
+``` dart
+    String reason = 'CustomHeartbeat';
+    await _trackingApi.sendCustomHeartbeats(reason: reason);
 ```
 
 **Tracking status**
