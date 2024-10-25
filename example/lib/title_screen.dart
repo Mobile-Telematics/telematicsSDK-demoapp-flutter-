@@ -180,6 +180,15 @@ class _TitleScreenState extends State<TitleScreen> {
                   ),
                 ),
               ),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: !_isManualTracking ? _onStartPersistentManualTracking : null,
+                  child: const Text(
+                    'Start persistent tracking manually',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
               SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
@@ -362,6 +371,30 @@ class _TitleScreenState extends State<TitleScreen> {
     }
 
     await _trackingApi.startManualTracking();
+    setState(() {
+      _isManualTracking = true;
+    });
+  }
+
+  Future<void> _onStartPersistentManualTracking() async {
+    final isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
+
+    if (!isSdkEnabled) {
+      _showSnackBar('Enable SDK first');
+      return;
+    }
+
+    if (!_isTracking && Platform.isIOS) {
+      _showSnackBar('Enable tracking first');
+      return;
+    }
+
+    if (_isManualTracking) {
+      _showSnackBar('Stop current track first');
+      return;
+    }
+
+    await _trackingApi.startManualPersistentTracking();
     setState(() {
       _isManualTracking = true;
     });

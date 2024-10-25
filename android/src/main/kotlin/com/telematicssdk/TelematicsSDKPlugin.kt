@@ -84,6 +84,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "setEnableSdk" -> setEnableSdk(call, result)
             "setDisableWithUpload" -> setDisableWithUpload(result)
             "startManualTracking" -> startManualTracking(result)
+            "startManualPersistentTracking" -> startManualPersistentTracking(result)
             "stopManualTracking" -> stopManualTracking(result)
             "enableHF" -> enableHF(call, result)
             "showPermissionWizard" -> showPermissionWizard(call, result)
@@ -174,6 +175,12 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
     private fun startManualTracking(result: Result) {
         val startResult = api.startTracking()
+
+        result.success(startResult)
+    }
+
+    private fun startManualPersistentTracking(result: Result) {
+        val startResult = api.startPersistentTracking()
 
         result.success(startResult)
     }

@@ -133,6 +133,8 @@ class TrackingApi {
 
   Future<bool?> startManualTracking() => _channel.invokeMethod('startManualTracking');
 
+  Future<bool?> startManualPersistentTracking() => _channel.invokeMethod('startManualPersistentTracking');
+
   Future<bool?> stopManualTracking() => _channel.invokeMethod('stopManualTracking');
 
   /// `SDK can work in two modes`:

@@ -58,6 +58,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             setDisableTracking(call, result: result)
         case "startManualTracking":
             startManualTracking(result)
+        case "startManualPersistentTracking":
+            startManualPersistentTracking(result)
         case "stopManualTracking":
             stopManualTracking(result)
         case "showPermissionWizard":
@@ -176,6 +178,11 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
 
     private func startManualTracking(_ result: @escaping FlutterResult) {
          RPTracker.instance().startTracking()
+         result(nil)
+    }
+
+    private func startManualPersistentTracking(_ result: @escaping FlutterResult) {
+         RPTracker.instance().startPersistentTracking()
          result(nil)
     }
 
