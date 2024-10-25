@@ -95,6 +95,9 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "addFutureTrackTag" -> addFutureTrackTag(call, result)
             "removeFutureTrackTag" -> removeFutureTrackTag(call, result)
             "removeAllFutureTrackTags" -> removeAllFutureTrackTags(result)
+            "uploadUnsentTrips" -> uploadUnsentTrips(result)
+            "getUnsentTripCount" -> getUnsentTripCount(result)
+            "sendCustomHeartbeats" -> sendCustomHeartbeats(call, result)
             else -> result.notImplemented()
         }
     }
@@ -189,6 +192,22 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         val stopResult = api.stopTracking()
 
         result.success(stopResult)
+    }
+
+    private fun uploadUnsentTrips(result: Result) {
+        api.uploadUnsentTrips()
+        result.success(null)
+    }
+
+    private fun getUnsentTripCount(result: Result) {
+        val result = api.getUnsentTripCount()
+        result.success(isGranted)
+    }
+
+    private fun sendCustomHeartbeats(call: MethodCall, result: Result) {
+        val reason = call.argument<String?>("reason") as String
+        api.sendCustomHeartbeats(reason)
+        result.success(null)
     }
 
     private fun showPermissionWizard(call: MethodCall, result: Result) {

@@ -137,6 +137,13 @@ class TrackingApi {
 
   Future<bool?> stopManualTracking() => _channel.invokeMethod('stopManualTracking');
 
+  Future<bool?> uploadUnsentTrips() => _channel.invokeMethod('uploadUnsentTrips');
+
+  Future<int?> getUnsentTripCount() => _channel.invokeMethod('getUnsentTripCount');
+
+  Future<bool?> sendCustomHeartbeats({required String reason}) =>
+      _channel.invokeMethod('sendCustomHeartbeats', {'reason': reason});
+
   /// `SDK can work in two modes`:
   /// `Aggressive` - heartbeats are sent every 20 minutes and SDK never sleeps.
   /// `Normal` - heartbeats are sent every 20 minutes but when system suspends SDK,

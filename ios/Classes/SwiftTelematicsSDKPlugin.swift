@@ -112,6 +112,12 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             getCurrentSpeed(result)
         case "getTracks":
             getTracks(call, result)
+        case "uploadUnsentTrips":
+            uploadUnsentTrips(result)
+        case "getUnsentTripCount":
+            getUnsentTripCount(result)
+        case "sendCustomHeartbeats":
+            sendCustomHeartbeats(call, result: result)
         default:
             print("not implemented")
         }
@@ -189,6 +195,25 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     private func stopManualTracking(_ result: @escaping FlutterResult) {
          RPTracker.instance().stopTracking()
          result(nil)
+    }
+    
+    private func uploadUnsentTrips(_ result: @escaping FlutterResult) {
+         RPEntry.instance().uploadUnsentTrips()
+         result(nil)
+    }
+    
+    private func getUnsentTripCount(_ result: @escaping FlutterResult) {
+         RPEntry.instance().getUnsentTripCount { tripsCount in
+             result(tripsCount)
+         }
+    }
+    
+    private func sendCustomHeartbeats(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let reason = args["reason"] as! String
+        
+        RPEntry.instance().sendCustomHeartbeat(reason)
+        result(nil)
     }
     
     private func showPermissionWizard(_ call: FlutterMethodCall, _ result: @escaping FlutterReply) {
