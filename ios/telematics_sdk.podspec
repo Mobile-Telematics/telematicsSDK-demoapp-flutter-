@@ -4,14 +4,14 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'telematics_sdk'
-  s.version          = '0.2.5 '
+  s.version          = '0.2.6'
   s.summary          = 'A new flutter plugin project.'
   s.description      = <<-DESC
 A new flutter plugin project.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'http://damoov.com'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Damoov Telematics' => 'admin@damoov.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
@@ -22,5 +22,5 @@ A new flutter plugin project.
   s.swift_version = '5.0'
 
   # Dependency
-  s.dependency 'RaxelPulse', '~> 6.0.5'
+  s.dependency 'RaxelPulse', '~> 6.0.6'
 end
