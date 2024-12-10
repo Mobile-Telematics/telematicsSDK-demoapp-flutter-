@@ -200,8 +200,8 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
     }
 
     private fun getUnsentTripCount(result: Result) {
-        val result = api.getUnsentTripCount()
-        result.success(isGranted)
+        val count = api.getUnsentTripCount()
+        result.success(count)
     }
 
     private fun sendCustomHeartbeats(call: MethodCall, result: Result) {
