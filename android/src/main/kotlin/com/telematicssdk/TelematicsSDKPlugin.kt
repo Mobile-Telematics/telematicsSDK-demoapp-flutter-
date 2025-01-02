@@ -53,6 +53,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
         /// register callbacks
         api.addTagsProcessingCallback(TagsProcessingListenerImp(channel))
+        api.setLocationListener(LocationListenerImp(channel))
     }
 
     override fun onDetachedFromActivity() {
