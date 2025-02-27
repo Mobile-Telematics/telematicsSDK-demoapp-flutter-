@@ -150,11 +150,8 @@ class TrackingApi {
   Future<bool?> setAggressiveHeartbeats({required bool value}) =>
       _channel.invokeMethod('setAggressiveHeartbeats', {'value': value});
 
-  Future<void> enableHF({required bool value}) =>
-      _channel.invokeMethod('enableHF', {'enableHF': value});
-
   Future<void> enableELM({required bool value}) =>
-      _channel.invokeMethod('enableHF', {'enableELM': value});
+      _channel.invokeMethod('enableELM', {'enableELM': value});
 
   Future<bool?> isEnabledELM() => _channel.invokeMethod('isEnabledELM');
 

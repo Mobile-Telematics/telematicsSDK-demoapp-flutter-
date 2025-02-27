@@ -88,8 +88,6 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             initializeSdk(call, result)
         case "isAggressiveHeartbeat":
             isAggressiveHeartbeat(result)
-        case "enableHF":
-            enableHF(call, result)
         case "enableELM":
             enableELM(call, result)
         case "enableAccidents":
@@ -727,15 +725,6 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     
     private func isAggressiveHeartbeat(_ result: @escaping FlutterResult) {
         result(RPEntry.instance.aggressiveHeartbeat())
-    }
-    
-    private func enableHF(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
-        guard let value = args["enableHF"] as? Bool else {
-            result(nil)
-            return
-        }
-        result(nil)
     }
     
     private func enableELM(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {

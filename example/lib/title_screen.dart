@@ -180,6 +180,7 @@ class _TitleScreenState extends State<TitleScreen> {
                   ),
                 ),
               ),
+              SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
                   onPressed: !_isManualTracking ? _onStartPersistentManualTracking : null,
@@ -226,7 +227,6 @@ class _TitleScreenState extends State<TitleScreen> {
       _showSnackBar('Please grant all required permissions');
     } else {
       await _trackingApi.setEnableSdk(enable: true);
-      await _trackingApi.enableHF(value: true);
 
       _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
 

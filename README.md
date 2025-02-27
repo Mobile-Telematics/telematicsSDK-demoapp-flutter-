@@ -245,12 +245,6 @@ Max persistent tracking duration is 10 hours.
     final isTracking = await _trackingApi.isTracking();
 ```
 
-**Enable high-frequency data collection (HF)**
-We strongly recommend keeping it enabled by default
-``` dart
-    await _trackingApi.enableHF(value: true);
-```
-
 **Create new tag**
 The detailed information about using Tags is available [here](https://docs.damoov.com/docs/ios-sdk-incoming-tags)
 ``` dart
