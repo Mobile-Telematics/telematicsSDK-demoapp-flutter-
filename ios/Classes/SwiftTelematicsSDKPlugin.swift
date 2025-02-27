@@ -1,5 +1,5 @@
 import Flutter
-import RaxelPulse
+import TelematicsSDK
 import UIKit
 
 struct Constants {
@@ -9,22 +9,18 @@ struct Constants {
     }
 }
 
-public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDelegate, RPLogDelegate, RPTrackingStateListenerDelegate, RPAccuracyAuthorizationDelegate, RPRTDLDelegate, RPLocationDelegate {
+public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDelegate, RPTrackingStateListenerDelegate, RPAccuracyAuthorizationDelegate, RPRTDLDelegate, RPLocationDelegate {
     
     private var channel: FlutterMethodChannel?
-    private var tagStateDelegate: TagStateDelegate?
     
     public init(methodChannel: FlutterMethodChannel) {
         super.init()
         channel = methodChannel
-        tagStateDelegate = TagStateDelegate(methodChannel: methodChannel)
-        RPEntry.instance().tagStateDelegate = tagStateDelegate
-        RPEntry.instance().lowPowerModeDelegate = self
-        RPEntry.instance().locationDelegate = self
-        RPEntry.instance().accuracyAuthorizationDelegate = self
-        RPEntry.instance().trackingStateDelegate = self
-        RPEntry.instance().logDelegate = self
-        RPEntry.instance().rtldDelegate = self
+        RPEntry.instance.lowPowerModeDelegate = self
+        RPEntry.instance.locationDelegate = self
+        RPEntry.instance.accuracyAuthorizationDelegate = self
+        RPEntry.instance.trackingStateDelegate = self
+        RPEntry.instance.rtldDelegate = self
     }
     
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -84,8 +80,6 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             getSdkVersion(result)
         case "isWrongAccuracyState":
             isWrongAccuracyState(result)
-        case "setWrongAccuracyState":
-            setWrongAccuracyState(call, result)
         case "getApiLanguage":
             getApiLanguage(result)
         case "setApiLanguage":
@@ -94,22 +88,14 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             initializeSdk(call, result)
         case "isAggressiveHeartbeat":
             isAggressiveHeartbeat(result)
-        case "setHeartbeatType":
-            setHeartbeatType(call, result)
         case "enableHF":
             enableHF(call, result)
         case "enableELM":
             enableELM(call, result)
         case "enableAccidents":
             enableAccidents(call, result)
-        case "enableRTLD":
-            enableRTLD(call, result)
         case "isRTLDEnabled":
             isRTLDEnabled(result)
-        case "getRTLDData":
-            getRTLDData(result)
-        case "getCurrentSpeed":
-            getCurrentSpeed(result)
         case "getTracks":
             getTracks(call, result)
         case "uploadUnsentTrips":
@@ -119,39 +105,40 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         case "sendCustomHeartbeats":
             sendCustomHeartbeats(call, result: result)
         default:
-            print("not implemented")
+            result(FlutterError(code: FlutterPluginCode.failure,
+                                message: "not implemented",
+                                details: nil)
+            )
         }
     }
     
     private func clearDeviceID(_ result: @escaping FlutterResult) {
-        RPEntry.instance().removeVirtualDeviceToken()
-        
+        RPEntry.instance.removeVirtualDeviceToken()
         result(nil)
     }
     
     private func getDeviceId(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance().virtualDeviceToken)
+        result(RPEntry.instance.virtualDeviceToken)
     }
     
     private func isAllRequiredPermissionsGranted(_ result: @escaping FlutterResult) {
-        result(RPEntry.isAllRequiredPermissionsGranted())
+        result(RPEntry.instance.isAllRequiredPermissionsGranted())
     }
     
     private func isSDKEnabled(_ result: @escaping FlutterResult) {
-        result(RPEntry.isSDKEnabled())
+        result(RPEntry.instance.isSDKEnabled())
     }
     
     private func isTracking(_ result: @escaping FlutterResult) {
-        result(RPTracker.instance().isActive)
+        result(RPEntry.instance.isTrackingActive())
     }
     
     private func setDeviceID(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         if let deviceId = args["deviceId"] as? String {
-            let virtualDeviceToken = NSString(string: deviceId)
-            RPEntry.instance().virtualDeviceToken = virtualDeviceToken
+            RPEntry.instance.virtualDeviceToken = deviceId
         } else {
-            RPEntry.instance().virtualDeviceToken = nil
+            RPEntry.instance.virtualDeviceToken = nil
         }
         
         result(nil)
@@ -161,12 +148,12 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         let args = call.arguments as! [String: Any]
         let enable = args["enable"] as! Bool
         
-        RPEntry.instance().setEnableSdk(enable)
+        RPEntry.instance.setEnableSdk(enable)
         result(nil)
     }
     
     private func setDisableWithUpload(_ result: @escaping FlutterResult) {
-        RPEntry.instance().setDisableWithUpload()
+        RPEntry.instance.setEnableSdk(false)
         result(nil)
     }
     
@@ -174,52 +161,50 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         let args = call.arguments as! [String: Any]
         let value = args["value"] as! Bool
         
-        RPEntry.instance().disableTracking = value
+        RPEntry.instance.disableTracking = value
         result(value)
     }
     
     private func isDisableTracking(result: @escaping FlutterResult) {
-        result(RPEntry.instance().disableTracking)
+        result(RPEntry.instance.disableTracking)
     }
 
     private func startManualTracking(_ result: @escaping FlutterResult) {
-         RPTracker.instance().startTracking()
-         result(nil)
+        RPEntry.instance.startTracking()
+        result(nil)
     }
 
     private func startManualPersistentTracking(_ result: @escaping FlutterResult) {
-         RPTracker.instance().startPersistentTracking()
-         result(nil)
+        RPEntry.instance.startPersistentTracking()
+        result(nil)
     }
 
     private func stopManualTracking(_ result: @escaping FlutterResult) {
-         RPTracker.instance().stopTracking()
-         result(nil)
+        RPEntry.instance.stopTracking()
+        result(nil)
     }
     
     private func uploadUnsentTrips(_ result: @escaping FlutterResult) {
-         RPEntry.instance().uploadUnsentTrips()
-         result(nil)
+        RPEntry.instance.uploadUnsentTrips()
+        result(nil)
     }
     
     private func getUnsentTripCount(_ result: @escaping FlutterResult) {
-         RPEntry.instance().getUnsentTripCount { tripsCount in
-             result(tripsCount)
-         }
+        result(RPEntry.instance.getUnsentTripCount())
     }
     
     private func sendCustomHeartbeats(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let reason = args["reason"] as! String
         
-        RPEntry.instance().sendCustomHeartbeat(reason)
-        result(nil)
+        RPEntry.instance.sendCustomHeartbeat(reason) { success, error in
+            result(nil)
+        }
     }
     
     private func showPermissionWizard(_ call: FlutterMethodCall, _ result: @escaping FlutterReply) {
         RPPermissionsWizard.returnInstance().launch(finish: { _ in
-            let wizardResult = RPEntry.isAllRequiredPermissionsGranted() ? Constants.WizardResult.allGranted : Constants.WizardResult.notAllGranted
-            
+            let wizardResult = RPEntry.instance.isAllRequiredPermissionsGranted() ? Constants.WizardResult.allGranted : Constants.WizardResult.notAllGranted
             self.channel?.invokeMethod("onPermissionWizardResult", arguments: wizardResult)
         })
         result(nil)
@@ -229,9 +214,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         let args = call.arguments as! [String: Any]
         let value = args["value"] as? Bool
         
-        let prevValue = RPEntry.instance().aggressiveHeartbeat()
-        
-        RPEntry.instance().setAggressiveHeartbeats(value ?? prevValue)
+        let prevValue = RPEntry.instance.aggressiveHeartbeat()
+        RPEntry.instance.setAggressiveHeartbeats(value ?? prevValue)
         
         result(nil)
     }
@@ -243,7 +227,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         handleEventsForBackgroundURLSession identifier: String,
         completionHandler: @escaping () -> Void
     ) -> Bool {
-        RPEntry.application(
+        RPEntry.instance.application(
             application,
             handleEventsForBackgroundURLSession: identifier,
             completionHandler: completionHandler
@@ -254,7 +238,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     public func applicationDidReceiveMemoryWarning(
         _ application: UIApplication
     ) {
-        RPEntry.applicationDidReceiveMemoryWarning(
+        RPEntry.instance.applicationDidReceiveMemoryWarning(
             application
         )
     }
@@ -262,7 +246,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     public func applicationWillTerminate(
         _ application: UIApplication
     ) {
-        RPEntry.applicationWillTerminate(
+        RPEntry.instance.applicationWillTerminate(
             application
         )
     }
@@ -270,7 +254,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     public func applicationDidEnterBackground(
         _ application: UIApplication
     ) {
-        RPEntry.applicationDidEnterBackground(
+        RPEntry.instance.applicationDidEnterBackground(
             application
         )
     }
@@ -278,7 +262,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     public func applicationDidBecomeActive(
         _ application: UIApplication
     ) {
-        RPEntry.applicationDidBecomeActive(
+        RPEntry.instance.applicationDidBecomeActive(
             application
         )
     }
@@ -286,7 +270,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     public func applicationWillEnterForeground(
         _ application: UIApplication
     ) {
-        RPEntry.applicationWillEnterForeground(
+        RPEntry.instance.applicationWillEnterForeground(
             application
         )
     }
@@ -295,7 +279,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         _ application: UIApplication,
         performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) -> Bool {
-        RPEntry.application(application) {
+        RPEntry.instance.application(application) {
             completionHandler(.newData)
         }
         return true
@@ -309,8 +293,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     }
     
     /// Handle Location change and Events
-    public func onLocationChanged(_ location: CLLocation!) {
-        guard let location else { return }
+    public func onLocationChanged(_ location: CLLocation) {
         let latitude = location.coordinate.latitude as Double
         let longitude = location.coordinate.longitude as Double
         let json: [String : Any?] = [
@@ -320,12 +303,10 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         self.channel?.invokeMethod("onLocationChanged", arguments: json)
     }
     
-    public func onNewEvents(_ events: NSMutableArray!) {  //TO DO
-        guard let events else { return }
-        for item in events {
-            if let theItem = item as? RPEventPoint {
-                
-            }
+    //TODO
+    public func onNewEvents(_ events: [RPEventPoint]) {
+        for event in events {
+            
         }
         //self.channel?.invokeMethod("onNewEvents", arguments: json)
     }
@@ -341,26 +322,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         self.channel?.invokeMethod("onTrackingStateChanged", arguments: state)
     }
     
-    /// Handle Log event and Log warning
-    public func logEvent(_ event: String) {
-        self.channel?.invokeMethod("onLogEvent", arguments: event as String)
-    }
-    
-    public func logWarning(_ warning: String) {
-        self.channel?.invokeMethod("onLogWarning", arguments: warning as String)
-    }
-    
-    /// Handle heartbeat sending state and collecting data state
-    public func heartbeatSended(_ state: Bool, success: Bool) {
-        let json: [String : Any?] = [
-            "state": state,
-            "success": success
-        ]
-        self.channel?.invokeMethod("onHeartbeatSent", arguments: json)
-    }
-    
-    public func rtldColecctedData(_ state: Bool) {
-        self.channel?.invokeMethod("onRtldCollectedData", arguments: state)
+    public func rtldColectedData() {
+        self.channel?.invokeMethod("onRtldCollectedData", arguments: true)
     }
     
     // MARK: - Tracks
@@ -373,12 +336,12 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         
         let utcISODateFormatter = ISO8601DateFormatter()
         
-        RPEntry.instance().api.getTracks(
+        RPEntry.instance.api.getTracksWithOffset(
             UInt(offset),
             limit: UInt(limit),
-            start: utcISODateFormatter.date(from: startDate ?? ""),
-            end: utcISODateFormatter.date(from: endDate ?? "")
-        ) { response, error in
+            startDate: utcISODateFormatter.date(from: startDate ?? ""),
+            endDate: utcISODateFormatter.date(from: endDate ?? "")
+        ) { tracks, error in
             if let error {
                 result(FlutterError(code: FlutterPluginCode.failure,
                                     message: error.localizedDescription,
@@ -386,11 +349,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
                 )
                 return
             }
-            
-            guard let feed = response as? RPFeed else {
-                return
-            }
-            
+            //TODO
         }
     }
     
@@ -400,14 +359,23 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         let args = call.arguments as! [String: Any]
         let trackId = args["trackId"] as! String
         
-        RPEntry.instance().api.getTrackTags(trackId) { response, error in
-            let tags = response as? RPTags
-            
+        RPEntry.instance.api.getTrackTags(trackId) { tags, error in
+            if let error {
+                result(FlutterError(code: FlutterPluginCode.failure,
+                                    message: error.localizedDescription,
+                                    details: nil)
+                )
+                return
+            }
             var res = [String]()
-            
-            tags?.tags.forEach { element in
+            tags.forEach {
+                let json = [
+                    "tag": $0.tag,
+                    "source": $0.source,
+                    "type": $0.type
+                ]
                 do {
-                    let json = try JSONSerialization.data(withJSONObject: element.toJSON(), options: .prettyPrinted)
+                    let json = try JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
                     let str = String(data: json, encoding: .utf8)!
                     res.append(str)
                 } catch {
@@ -417,9 +385,31 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
                     )
                 }
             }
-            
             result(res)
         }
+    }
+    
+    private func createTrackTag(fromJsonArray jsonArray: [String]) -> [RPTag] {
+        var result = [RPTag]()
+        
+        for json in jsonArray {
+            guard let data = json.data(using: .utf8) else {
+                continue
+            }
+            
+            guard let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+                continue
+            }
+            
+            guard let tagString = jsonObject["tag"] as? String else {
+                continue
+            }
+            let source = jsonObject["source"] as? String
+            let tag = RPTag(tag: tagString, source: source)
+            result.append(tag)
+        }
+        
+        return result
     }
     
     private func addTrackTags(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
@@ -427,29 +417,26 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         let trackId = args["trackId"] as! String
         let strings = args["tags"] as! [String]
         
-        let tags = strings.map { (element) -> RPTag in
-            if let data = element.data(using: .utf8) {
-                do {
-                    let json = try JSONSerialization.jsonObject(with: data)
-                    return RPTag.init(json: json)!
-                } catch {
-                    result(FlutterError(code: FlutterPluginCode.failure,
-                                        message: "Json deserialization of tag failed",
-                                        details: nil)
-                    )
-                }
-            }
-            return RPTag()
-        }
+        let tags = self.createTrackTag(fromJsonArray: strings)
         
-        RPEntry.instance().api.addTrackTags(tags, to: trackId) { response, error in
-            let tags = response as? RPTags
+        RPEntry.instance.api.addTrackTags(tags, to: trackId) { tags, error in
+            if let error {
+                result(FlutterError(code: FlutterPluginCode.failure,
+                                    message: error.localizedDescription,
+                                    details: nil)
+                )
+                return
+            }
             
             var res = [String]()
-            
-            tags?.tags.forEach { element in
+            tags.forEach {
+                let json = [
+                    "tag": $0.tag,
+                    "source": $0.source,
+                    "type": $0.type
+                ]
                 do {
-                    let json = try JSONSerialization.data(withJSONObject: element.toJSON(), options: .prettyPrinted)
+                    let json = try JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
                     let str = String(data: json, encoding: .utf8)!
                     res.append(str)
                 } catch {
@@ -459,7 +446,6 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
                     )
                 }
             }
-            
             result(res)
         }
     }
@@ -469,29 +455,26 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         let trackId = args["trackId"] as! String
         let strings = args["tags"] as! [String]
         
-        let tags = strings.map { (element) -> RPTag in
-            if let data = element.data(using: .utf8) {
-                do {
-                    let json = try JSONSerialization.jsonObject(with: data)
-                    return RPTag.init(json: json)!
-                } catch {
-                    result(FlutterError(code: FlutterPluginCode.failure,
-                                        message: "Json deserialization of tag failed",
-                                        details: nil)
-                    )
-                }
-            }
-            return RPTag()
-        }
+        let tags = self.createTrackTag(fromJsonArray: strings)
         
-        RPEntry.instance().api.removeTrackTags(tags, from: trackId) { response, error in
-            let tags = response as? RPTags
+        RPEntry.instance.api.removeTrackTags(tags, from: trackId) { tags, error in
+            if let error {
+                result(FlutterError(code: FlutterPluginCode.failure,
+                                    message: error.localizedDescription,
+                                    details: nil)
+                )
+                return
+            }
             
             var res = [String]()
-            
-            tags?.tags.forEach { element in
+            tags.forEach {
+                let json = [
+                    "tag": $0.tag,
+                    "source": $0.source,
+                    "type": $0.type
+                ]
                 do {
-                    let json = try JSONSerialization.data(withJSONObject: element.toJSON(), options: .prettyPrinted)
+                    let json = try JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
                     let str = String(data: json, encoding: .utf8)!
                     res.append(str)
                 } catch {
@@ -501,7 +484,6 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
                     )
                 }
             }
-            
             result(res)
         }
         
@@ -509,41 +491,174 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     
     //MARK: - Future track tags
     
+    private func getFutureTagStatusStrung(from status: RPTagStatus) -> String {
+        switch status {
+        case .success:
+            return "SUCCESS"
+        case .offline:
+            return "OFFLINE"
+        case .errorTagOperation:
+            return "ERROR_TAG_OPERATION"
+        @unknown default:
+            return ""
+        }
+    }
+    
     private func getFutureTrackTags(_ result: @escaping FlutterResult) {
-        RPEntry.instance().api.getFutureTrackTag(0, completion: nil)
-        
-        result(nil)
+        RPEntry.instance.api.getFutureTrackTag { [weak self] status, tags in
+            
+            var strTags = [String]()
+            
+            tags.forEach {
+                let tagJson: [String: Any?] = [
+                    "tag": $0.tag,
+                    "source": $0.source,
+                    "type": $0.type,
+                    "activationTime": Int($0.timestamp.timeIntervalSince1970)
+                ]
+                guard
+                    let jsonString = try? JSONSerialization.data(withJSONObject: tagJson, options: .prettyPrinted),
+                    let strTag = String(data: jsonString, encoding: .utf8)
+                else {
+                    result(FlutterError(code: FlutterPluginCode.failure,
+                                        message: "Json serialization of tag failed",
+                                        details: nil)
+                    )
+                    return
+                }
+                
+                strTags.append(strTag)
+            }
+            
+            let status = self?.getFutureTagStatusStrung(from: status) ?? "SUCCESS"
+            let timestamp: Int = Int(tags.first?.timestamp.timeIntervalSince1970 ?? 0)
+            let json: [String : Any?] = [
+                "status": status,
+                "tags": strTags,
+                "time": timestamp
+            ]
+            self?.channel?.invokeMethod("onGetTags", arguments: json)
+            result(nil)
+        }
     }
     
     private func addFutureTrackTag(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
-        let _tag = args["tag"] as! String?
-        let _source = args["source"] as! String?
+        let tag = args["tag"] as? String
+        let source = args["source"] as? String
         
-        let json = ["tag": _tag, "source": _source]
-        let tag = RPTag.init(json: json)
+        guard let tag else {
+            result(FlutterError(code: FlutterPluginCode.failure,
+                                message: "tag field is required",
+                                details: nil)
+            )
+            return
+        }
         
-        RPEntry.instance().api.addFutureTrackTag(tag, completion: nil)
-        
-        result(nil)
+        let futureTag = RPFutureTag(tag: tag, source: source)
+        RPEntry.instance.api.addFutureTrackTag(futureTag) { [weak self] status, error in
+            if let error {
+                result(FlutterError(code: FlutterPluginCode.failure,
+                                    message: error.localizedDescription,
+                                    details: nil)
+                )
+                return
+            }
+            
+            let status = self?.getFutureTagStatusStrung(from: status) ?? "SUCCESS"
+            let tagJson: [String: Any?] = [
+                "tag": futureTag.tag,
+                "source": futureTag.source,
+                "type": futureTag.type,
+                "activationTime": Int(futureTag.timestamp.timeIntervalSince1970)
+            ]
+            
+            guard
+                let jsonString = try? JSONSerialization.data(withJSONObject: tagJson, options: .prettyPrinted),
+                let strTag = String(data: jsonString, encoding: .utf8)
+            else {
+                result(FlutterError(code: FlutterPluginCode.failure,
+                                    message: "Json serialization of tag failed",
+                                    details: nil)
+                )
+                return
+            }
+            
+            let json: [String : Any?] = [
+                "status": status,
+                "tag": strTag,
+                "activationTime": Int(futureTag.timestamp.timeIntervalSince1970)
+            ]
+            
+            self?.channel?.invokeMethod("onTagAdd", arguments: json)
+            result(nil)
+        }
     }
     
     private func removeFutureTrackTag(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
-        let _tag = args["tag"] as! String?
+        let tag = args["tag"] as? String
+        let source = args["source"] as? String
         
-        let json = ["tag": _tag]
-        let tag = RPTag.init(json: json)
+        guard let tag else {
+            result(FlutterError(code: FlutterPluginCode.failure,
+                                message: "tag field is required",
+                                details: nil)
+            )
+            return
+        }
         
-        RPEntry.instance().api.removeFutureTrackTag(tag, completion: nil)
-        
-        result(nil)
+        let futureTag = RPFutureTag(tag: tag, source: source)
+        RPEntry.instance.api.removeFutureTrackTag(futureTag) { [weak self] status, error in
+            if let error {
+                result(FlutterError(code: FlutterPluginCode.failure,
+                                    message: error.localizedDescription,
+                                    details: nil)
+                )
+                return
+            }
+            
+            let status = self?.getFutureTagStatusStrung(from: status) ?? "SUCCESS"
+            let tagJson: [String: Any?] = [
+                "tag": futureTag.tag,
+                "source": futureTag.source,
+                "type": futureTag.type,
+                "activationTime": Int(futureTag.timestamp.timeIntervalSince1970)
+            ]
+            
+            guard
+                let jsonString = try? JSONSerialization.data(withJSONObject: tagJson, options: .prettyPrinted),
+                let strTag = String(data: jsonString, encoding: .utf8)
+            else {
+                result(FlutterError(code: FlutterPluginCode.failure,
+                                    message: "Json serialization of tag failed",
+                                    details: nil)
+                )
+                return
+            }
+            
+            let json: [String : Any?] = [
+                "status": status,
+                "tag": strTag,
+                "activationTime": Int(futureTag.timestamp.timeIntervalSince1970)
+            ]
+            
+            self?.channel?.invokeMethod("onTagRemove", arguments: json)
+            result(nil)
+        }
     }
     
     private func removeAllFutureTrackTags(_ result: @escaping FlutterResult) {
-        RPEntry.instance().api.removeAllFutureTrackTagsWithСompletion(nil)
-        
-        result(nil)
+        RPEntry.instance.api.removeAllFutureTrackTags { [weak self] status, error in
+            let status = self?.getFutureTagStatusStrung(from: status) ?? "SUCCESS"
+            let json: [String : Any?] = [
+                "status": status,
+                "time": 0
+            ]
+            
+            self?.channel?.invokeMethod("onAllTagsRemove", arguments: json)
+            result(nil)
+        }
     }
     
     
@@ -551,25 +666,16 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     
     /// Current SDK Version
     private func getSdkVersion(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance().version)
+        result(RPEntry.instance.version)
     }
     
     /// wrongAccuracyAuthorization
     private func isWrongAccuracyState(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance().wrongAccuracyState)
-    }
-    
-    private func setWrongAccuracyState(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
-        guard let args = call.arguments as? [String: Any], let value = args["value"] as? Bool else {
-            result(nil)
-            return
-        }
-        RPEntry.instance().wrongAccuracyState = value
-        result(nil)
+        result(RPEntry.instance.wrongAccuracyState)
     }
     
     private func getApiLanguage(_ result: @escaping FlutterResult) {
-        let language = RPEntry.instance().apiLanguage
+        let language = RPEntry.instance.apiLanguage
         switch language {
         case .none:
             result("None")
@@ -593,49 +699,34 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             return
         }
         if language == "None" {
-            RPEntry.instance().apiLanguage = RPApiLanguage.none
+            RPEntry.instance.apiLanguage = .none
         }
         if language == "English" {
-            RPEntry.instance().apiLanguage = RPApiLanguage.english
+            RPEntry.instance.apiLanguage = .english
         }
         if language == "Russian" {
-            RPEntry.instance().apiLanguage = RPApiLanguage.russian
+            RPEntry.instance.apiLanguage = .russian
         }
         if language == "Portuguese" {
-            RPEntry.instance().apiLanguage = RPApiLanguage.portuguese
+            RPEntry.instance.apiLanguage = .portuguese
         }
         if language == "Spanish" {
-            RPEntry.instance().apiLanguage = RPApiLanguage.spanish
+            RPEntry.instance.apiLanguage = .spanish
         }
         
         result(nil)
     }
     
     /*
-     Initializes new RPEntry class instance with specified device ID. Must be the first method calling from RaxelPulse SDK.
-     withRequestingPermissions Indicates whether the SDK should request system permissions.
+     Initializes new RPEntry class instance with specified device ID. Must be the first method calling from Telematics SDK.
      */
     private func initializeSdk(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
-        guard let args = call.arguments as? [String: Any], let value = args["value"] as? Bool else {
-            result(nil)
-            return
-        }
-        RPEntry.initialize(withRequestingPermissions: value)
+        RPEntry.initializeSDK()
         result(nil)
     }
     
     private func isAggressiveHeartbeat(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance().aggressiveHeartbeat())
-    }
-    
-    private func setHeartbeatType(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
-        guard let heartbeatType = args["heartbeatType"] as? Int else {
-            result(nil)
-            return
-        }
-        RPEntry.setHeartbeatType(HeartbeatType(rawValue: heartbeatType))
-        result(nil)
+        result(RPEntry.instance.aggressiveHeartbeat())
     }
     
     private func enableHF(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
@@ -644,7 +735,6 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             result(nil)
             return
         }
-        RPEntry.enableHF(value)
         result(nil)
     }
     
@@ -654,7 +744,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             result(nil)
             return
         }
-        RPEntry.enableELM(value)
+        RPEntry.instance.enableELM(value)
         result(nil)
     }
     
@@ -664,41 +754,20 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             result(nil)
             return
         }
-        RPEntry.enableAccidents(value)
+        RPEntry.instance.enableAccidents(value)
         result(nil)
     }
     
     private func isEnabledELM(_ result: @escaping FlutterResult) {
-        result(RPEntry.isEnabledELM())
+        result(RPEntry.instance.isEnabledELM())
     }
     
     private func isEnabledAccidents(_ result: @escaping FlutterResult) {
-        result(RPEntry.isEnabledAccidents())
-    }
-    
-    private func enableRTLD(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
-        guard let value = args["enableRTLD"] as? Bool else {
-            result(nil)
-            return
-        }
-        RPEntry.enableRTLD(value)
-        result(nil)
+        result(RPEntry.instance.isEnabledAccidents())
     }
     
     private func isRTLDEnabled(_ result: @escaping FlutterResult) {
-        result(RPEntry.isRTDEnabled())
+        result(RPEntry.instance.isRTDEnabled())
     }
     
-    private func getRTLDData(_ result: @escaping FlutterResult) {
-        RPEntry.getRTLData { stringData in
-            result(stringData as String)
-        }
-    }
-    
-    private func getCurrentSpeed(_ result: @escaping FlutterResult) {
-        RPEntry.instance().currentSpeed { speed in
-            result(speed.doubleValue)
-        }
-    }
 }

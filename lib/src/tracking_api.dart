@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:telematics_sdk/src/data/api_language.dart';
-import 'package:telematics_sdk/src/data/heartbeat_type.dart';
 import 'package:telematics_sdk/src/data/track_tag.dart';
 import 'package:telematics_sdk/src/native_call_handler.dart';
 import 'package:telematics_sdk/src/data/future_track_callbacks.dart';
@@ -48,12 +47,11 @@ class TrackingApi {
   Stream<bool> get rtldCollectedData => _handler.rtldCollectedData;
 
   /*
-  Initializes new RPEntry class instance with specified device ID. Must be the first method calling from RaxelPulse SDK.
-  withRequestingPermissions Indicates whether the SDK should request system permissions.
+  Initializes new RPEntry class instance with specified device ID. Must be the first method calling from Telematics SDK.
   */
-  Future<void> initializeSdk({required bool withRequestingPermissions}) =>
+  Future<void> initializeSdk() =>
       _channel
-          .invokeMethod('initializeSdk', {'value': withRequestingPermissions});
+          .invokeMethod('initializeSdk');
 
   Future<String?> getSdkVersion() => _channel.invokeMethod('getSdkVersion');
 
@@ -102,9 +100,6 @@ class TrackingApi {
 
   Future<bool?> isWrongAccuracyState() =>
       _channel.invokeMethod('isWrongAccuracyState');
-
-  Future<void> setWrongAccuracyState({required bool state}) =>
-      _channel.invokeMethod('setWrongAccuracyState', {'value': state});
 
   Future<bool?> isAllRequiredPermissionsAndSensorsGranted() =>
       _channel.invokeMethod('isAllRequiredPermissionsAndSensorsGranted');
@@ -155,20 +150,6 @@ class TrackingApi {
   Future<bool?> setAggressiveHeartbeats({required bool value}) =>
       _channel.invokeMethod('setAggressiveHeartbeats', {'value': value});
 
-  Future<void> setHeartbeatType({required HeartbeatType type}) {
-    var heartbeatType = 0;
-    switch (type) {
-      case HeartbeatType.defaultType:
-        heartbeatType = 0;
-      case HeartbeatType.aggressiveType:
-        heartbeatType = 1;
-      case HeartbeatType.lowType:
-        heartbeatType = 2;
-    }
-    return _channel
-        .invokeMethod('setHeartbeatType', {'heartbeatType': heartbeatType});
-  }
-
   Future<void> enableHF({required bool value}) =>
       _channel.invokeMethod('enableHF', {'enableHF': value});
 
@@ -183,14 +164,7 @@ class TrackingApi {
   Future<bool?> isEnabledAccidents() =>
       _channel.invokeMethod('isEnabledAccidents');
 
-  Future<void> enableRTLD({required bool value}) =>
-      _channel.invokeMethod('enableRTLD', {'enableRTLD': value});
-
   Future<bool?> isRTLDEnabled() => _channel.invokeMethod('isRTLDEnabled');
-
-  Future<String?> getRTLDData() => _channel.invokeMethod('getRTLDData');
-
-  Future<double?> getCurrentSpeed() => _channel.invokeMethod('getCurrentSpeed');
 
   /// If [enableAggressivePermissionsWizard] set to `true` the wizard will be
   /// finished if all required permissions granted (user can’t cancel it with
