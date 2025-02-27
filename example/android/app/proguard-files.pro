@@ -1,1 +1,1 @@
--keep public class com.raxeltelematics.** {*;}
+-keep public class com.telematicssdk.tracking.** {*;}

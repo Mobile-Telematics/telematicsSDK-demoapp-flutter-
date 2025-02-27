@@ -2,8 +2,8 @@ package com.telematicssdk.example
 
 import android.util.Log
 import com.telematicssdk.TelematicsSDKApp
-import com.raxeltelematics.v2.sdk.Settings
-import com.raxeltelematics.v2.sdk.TrackingApi
+import com.telematicssdk.tracking.Settings
+import com.telematicssdk.tracking.TrackingApi
 
 class App : TelematicsSDKApp() {
 

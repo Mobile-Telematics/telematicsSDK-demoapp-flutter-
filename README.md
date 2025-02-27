@@ -69,7 +69,7 @@ add to file (module)/build.gradle props:
 #### Proguard
 
 ``` markdown
--keep public class com.raxeltelematics.** {*;}
+-keep public class com.telematicssdk.tracking.** {*;}
 ```
 
 ### Android Advanced
@@ -117,7 +117,7 @@ add to file (module)/build.gradle props:
     ```groovy
     dependencies {
         //...
-        implementation "com.telematicssdk:tracking:2.2.263"
+        implementation "com.telematicssdk:tracking:3.0.0"
     }
     ```
 

@@ -5,9 +5,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.NonNull
 import org.json.JSONObject
-import com.raxeltelematics.v2.sdk.TrackingApi
-import com.raxeltelematics.v2.sdk.server.model.sdk.TrackTag
-import com.raxeltelematics.v2.sdk.utils.permissions.PermissionsWizardActivity
+import com.telematicssdk.tracking.TrackingApi
+import com.telematicssdk.tracking.server.model.sdk.TrackTag
+import com.telematicssdk.tracking.utils.permissions.PermissionsWizardActivity
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware

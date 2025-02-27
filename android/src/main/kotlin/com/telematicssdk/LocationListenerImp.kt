@@ -4,7 +4,7 @@ import android.location.Location
 import android.os.Looper
 import android.os.Handler
 import io.flutter.plugin.common.MethodChannel
-import com.raxeltelematics.v2.sdk.LocationListener
+import com.telematicssdk.tracking.LocationListener
 
 class LocationListenerImp(private val channel: MethodChannel): LocationListener {
 
