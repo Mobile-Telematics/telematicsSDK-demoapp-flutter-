@@ -2,7 +2,7 @@ group 'com.telematicssdk'
 version '2.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.9.0'
+    ext.kotlin_version = '2.1.10'
     ext.raxel_tracking = '3.0.0'
     repositories {
         google()
@@ -30,7 +30,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion 35
     namespace "com.telematicssdk"
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -46,6 +46,11 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packagingOptions {
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/io.netty.versions.properties'
     }
 }
 
