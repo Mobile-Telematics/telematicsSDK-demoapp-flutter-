@@ -1,8 +1,8 @@
 package com.telematicssdk
 
 import org.json.JSONObject
-import com.raxeltelematics.v2.sdk.server.model.sdk.TrackTag
-import com.raxeltelematics.v2.sdk.server.model.sdk.raw_tags.Tag
+import com.telematicssdk.tracking.server.model.sdk.TrackTag
+import com.telematicssdk.tracking.server.model.sdk.raw_tags.Tag
 
 fun TrackTag.toJsonString(): String {
     val json = mapOf<String, Any?>(

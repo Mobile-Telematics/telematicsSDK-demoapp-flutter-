@@ -5,9 +5,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.NonNull
 import org.json.JSONObject
-import com.raxeltelematics.v2.sdk.TrackingApi
-import com.raxeltelematics.v2.sdk.server.model.sdk.TrackTag
-import com.raxeltelematics.v2.sdk.utils.permissions.PermissionsWizardActivity
+import com.telematicssdk.tracking.TrackingApi
+import com.telematicssdk.tracking.server.model.sdk.TrackTag
+import com.telematicssdk.tracking.utils.permissions.PermissionsWizardActivity
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -87,7 +87,6 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "startManualTracking" -> startManualTracking(result)
             "startManualPersistentTracking" -> startManualPersistentTracking(result)
             "stopManualTracking" -> stopManualTracking(result)
-            "enableHF" -> enableHF(call, result)
             "showPermissionWizard" -> showPermissionWizard(call, result)
             "getTrackTags" -> getTrackTags(call, result)
             "addTrackTags" -> addTrackTags(call, result)
@@ -164,11 +163,6 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
     private fun setEnableSdk(call: MethodCall, result: Result) {
         val enable = call.argument<Boolean?>("enable") as Boolean
         api.setEnableSdk(enable)
-        result.success(null)
-    }
-    private fun enableHF(call: MethodCall, result: Result) {
-        val enable = call.argument<Boolean?>("enableHF") as Boolean
-        api.setHfRecordingEnabled(enable)
         result.success(null)
     }
 

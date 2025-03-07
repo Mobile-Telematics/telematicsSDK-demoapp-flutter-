@@ -1,8 +1,8 @@
 package com.telematicssdk
 
-import com.raxeltelematics.v2.sdk.TagsProcessingListener
-import com.raxeltelematics.v2.sdk.model.database.models.raw_tags.Status
-import com.raxeltelematics.v2.sdk.server.model.sdk.raw_tags.Tag
+import com.telematicssdk.tracking.TagsProcessingListener
+import com.telematicssdk.tracking.model.database.models.raw_tags.Status
+import com.telematicssdk.tracking.server.model.sdk.raw_tags.Tag
 import io.flutter.plugin.common.MethodChannel
 
 class TagsProcessingListenerImp(private val channel: MethodChannel) : TagsProcessingListener {

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+* Updated iOS sdk version to 7.0.0
+* Updated Android sdk version to 3.0.0
+
 ## 0.2.7
 
 * Fixed android SDK crash
