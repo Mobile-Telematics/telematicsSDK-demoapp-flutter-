@@ -69,7 +69,7 @@ add to file (module)/build.gradle props:
 #### Proguard
 
 ``` markdown
--keep public class com.raxeltelematics.** {*;}
+-keep public class com.telematicssdk.tracking.** {*;}
 ```
 
 ### Android Advanced
@@ -117,7 +117,7 @@ add to file (module)/build.gradle props:
     ```groovy
     dependencies {
         //...
-        implementation "com.telematicssdk:tracking:2.2.263"
+        implementation "com.telematicssdk:tracking:3.0.0"
     }
     ```
 
@@ -148,7 +148,18 @@ Add permissions in your project's `ios/Runner/Info.plist`:
 ```
 Starting from iOS version 15 and above, as well as Flutter 2.0.6, modification of `ios/Runner/AppDelegate.swift` is required 
 You must request permissions for the application before GeneratedPluginRegistrant
-[Example AppDelegate.swift](https://github.com/Mobile-Telematics/telematicsSDK-demoapp-flutter-/blob/main/example/ios/Runner/AppDelegate.swift)
+    ```swift
+    @main
+    @objc class AppDelegate: FlutterAppDelegate {
+    
+        override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+            RPEntry.initializeSDK()
+            RPEntry.instance.application(application, didFinishLaunchingWithOptions: launchOptions)
+            GeneratedPluginRegistrant.register(with: self)
+            return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+        }
+    }
+    ```
 
 ### Enabling and Disabling the SDK
 
@@ -232,12 +243,6 @@ Max persistent tracking duration is 10 hours.
 **Tracking status**
 ``` dart
     final isTracking = await _trackingApi.isTracking();
-```
-
-**Enable high-frequency data collection (HF)**
-We strongly recommend keeping it enabled by default
-``` dart
-    await _trackingApi.enableHF(value: true);
 ```
 
 **Create new tag**

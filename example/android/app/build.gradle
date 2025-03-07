@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion 35
     namespace "com.telematicssdk.example"
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -47,6 +47,11 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
+    packagingOptions {
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/io.netty.versions.properties'
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
@@ -64,5 +69,5 @@ flutter {
 }
 
 dependencies {
-    implementation "com.telematicssdk:tracking:2.2.263"
+    implementation "com.telematicssdk:tracking:3.0.0"
 }

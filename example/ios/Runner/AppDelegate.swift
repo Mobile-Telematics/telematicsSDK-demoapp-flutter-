@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-import RaxelPulse
+import TelematicsSDK
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -8,11 +8,8 @@ import RaxelPulse
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-      RPEntry.initialize(withRequestingPermissions: false)
-      
-      let options = launchOptions ?? [:]
-      RPEntry.application(application, didFinishLaunchingWithOptions: options)
-      
+      RPEntry.initializeSDK()
+      RPEntry.instance.application(application, didFinishLaunchingWithOptions: launchOptions)
       GeneratedPluginRegistrant.register(with: self)
       return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
