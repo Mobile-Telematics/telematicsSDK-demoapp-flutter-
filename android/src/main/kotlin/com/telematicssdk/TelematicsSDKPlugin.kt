@@ -8,6 +8,7 @@ import org.json.JSONObject
 import com.telematicssdk.tracking.TrackingApi
 import com.telematicssdk.tracking.server.model.sdk.TrackTag
 import com.telematicssdk.tracking.utils.permissions.PermissionsWizardActivity
+import com.telematicssdk.tracking.model.realtime.configuration.AccidentDetectionSensitivity
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -98,6 +99,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "uploadUnsentTrips" -> uploadUnsentTrips(result)
             "getUnsentTripCount" -> getUnsentTripCount(result)
             "sendCustomHeartbeats" -> sendCustomHeartbeats(call, result)
+            "setAccidentDetectionSensitivity" -> setAccidentDetectionSensitivity(call, result)
             else -> result.notImplemented()
         }
     }
@@ -290,4 +292,19 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
         result.success(null)
     }
+
+    private fun setAccidentDetectionSensitivity(call: MethodCall, result: Result) {
+        val value = call.argument<String?>("accidentDetectionSensitivity") as Int
+
+        val sensitivity = when (value) {
+            0 -> AccidentDetectionSensitivity.Normal
+            1 -> AccidentDetectionSensitivity.Sensitive
+            2 -> AccidentDetectionSensitivity.Tough
+            else -> AccidentDetectionSensitivity.Normal
+        }
+
+        api.setAccidentDetectionMode(sensitivity)
+        result.success(null)
+    }
+
 }

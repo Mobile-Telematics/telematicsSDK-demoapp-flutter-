@@ -176,20 +176,6 @@ class TrackingApi {
         .invokeMethod('setAccidentDetectionSensitivity', {'accidentDetectionSensitivity': value});
   }
 
-  Future<AccidentDetectionSensitivity> getAccidentDetectionSensitivity() {
-    return _channel.invokeMethod<String>('getApiLanguage').then((value) {
-      if (value == 0) {
-        return AccidentDetectionSensitivity.normal;
-      } else if (value == 1) {
-        return AccidentDetectionSensitivity.sensitive;
-      } else if (value == 2) {
-        return AccidentDetectionSensitivity.tough;
-      } else {
-        return AccidentDetectionSensitivity.normal;
-      }
-    });
-  }
-
   Future<bool?> isRTLDEnabled() => _channel.invokeMethod('isRTLDEnabled');
 
   /// If [enableAggressivePermissionsWizard] set to `true` the wizard will be
