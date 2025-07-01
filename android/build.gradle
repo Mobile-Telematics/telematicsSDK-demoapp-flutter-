@@ -3,7 +3,7 @@ version '2.0-SNAPSHOT'
 
 buildscript {
     ext.kotlin_version = '2.1.10'
-    ext.raxel_tracking = '3.0.0'
+    ext.raxel_tracking = '3.1.0'
     repositories {
         google()
         jcenter()
@@ -11,7 +11,7 @@ buildscript {
 
     dependencies {
         //noinspection GradleDependency
-        classpath 'com.android.tools.build:gradle:8.2.2'
+        classpath 'com.android.tools.build:gradle:8.3.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -44,8 +44,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
 
     packagingOptions {
