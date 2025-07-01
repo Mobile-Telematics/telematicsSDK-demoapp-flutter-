@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+* Updated iOS sdk version to 7.0.1
+* Updated Android sdk version to 3.1.0
+
 ## 0.3.0
 
 * Updated iOS sdk version to 7.0.0
