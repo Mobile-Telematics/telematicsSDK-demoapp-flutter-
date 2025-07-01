@@ -92,6 +92,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             enableELM(call, result)
         case "enableAccidents":
             enableAccidents(call, result)
+        case "setAccidentDetectionSensitivity":
+            setAccidentDetectionSensitivity(call, result)
         case "isRTLDEnabled":
             isRTLDEnabled(result)
         case "getTracks":
@@ -747,6 +749,17 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         result(nil)
     }
     
+    private func setAccidentDetectionSensitivity(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        guard let value = args["accidentDetectionSensitivity"] as? Int else {
+            result(nil)
+            return
+        }
+        let sensitivity = RPAccidentDetectionSensitivity.init(rawValue: value) ?? .normal
+        RPEntry.instance.accidentDetectionSensitivity = sensitivity
+        result(nil)
+    }
+    
     private func isEnabledELM(_ result: @escaping FlutterResult) {
         result(RPEntry.instance.isEnabledELM())
     }
@@ -758,5 +771,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     private func isRTLDEnabled(_ result: @escaping FlutterResult) {
         result(RPEntry.instance.isRTDEnabled())
     }
+    
+    
     
 }
