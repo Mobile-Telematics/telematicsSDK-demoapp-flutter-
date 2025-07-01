@@ -1,0 +1,1 @@
+enum AccidentDetectionSensitivity { normal, sensitive, tough }

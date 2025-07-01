@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+import 'package:telematics_sdk/src/data/accident_detection_sensitivity.dart';
 import 'package:telematics_sdk/src/data/api_language.dart';
 import 'package:telematics_sdk/src/data/track_tag.dart';
 import 'package:telematics_sdk/src/native_call_handler.dart';
@@ -160,6 +161,34 @@ class TrackingApi {
 
   Future<bool?> isEnabledAccidents() =>
       _channel.invokeMethod('isEnabledAccidents');
+
+  Future<void> setAccidentDetectionSensitivity({required AccidentDetectionSensitivity sensitivity}) {
+    int value = 0;
+    switch (sensitivity) {
+      case AccidentDetectionSensitivity.normal:
+        value = 0;
+      case AccidentDetectionSensitivity.sensitive:
+        value = 1;
+      case AccidentDetectionSensitivity.tough:
+        value = 2;
+    }
+    return _channel
+        .invokeMethod('setAccidentDetectionSensitivity', {'accidentDetectionSensitivity': value});
+  }
+
+  Future<AccidentDetectionSensitivity> getAccidentDetectionSensitivity() {
+    return _channel.invokeMethod<String>('getApiLanguage').then((value) {
+      if (value == 0) {
+        return AccidentDetectionSensitivity.normal;
+      } else if (value == 1) {
+        return AccidentDetectionSensitivity.sensitive;
+      } else if (value == 2) {
+        return AccidentDetectionSensitivity.tough;
+      } else {
+        return AccidentDetectionSensitivity.normal;
+      }
+    });
+  }
 
   Future<bool?> isRTLDEnabled() => _channel.invokeMethod('isRTLDEnabled');
 
