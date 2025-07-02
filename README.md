@@ -343,6 +343,12 @@ In order for accidents detection to work, you need to [enable high-frequency dat
     final isEnabledAccidents = await _trackingApi.isEnabledAccidents();
 ```
 
+**Change Accident detection sensitivity**
+Accident detection sensitivity is normal by default. You can change sensitivity. Sensitivity options which is available to apply: .normal, .sensitive, .tough
+``` dart
+    await _trackingApi.setAccidentDetectionSensitivity(sensitivity: AccidentDetectionSensitivity.normal);
+```
+
 ## Links
 
 [https://damoov.com](https://damoov.com/)
