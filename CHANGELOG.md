@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+
+* Updated Android Gradle version to 8.7
+* Update Android targetSdkVersion to 35
+
 ## 0.3.1
 
 * Updated iOS sdk version to 7.0.1
