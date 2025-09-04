@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3
+
+* Updated Gradle version to 8.13
+* Updated Android Gradle Plugin version to 8.12.0
+* Updated Android sdk version to 3.1.1
+
 ## 0.3.2
 
 * Updated Android Gradle version to 8.7
