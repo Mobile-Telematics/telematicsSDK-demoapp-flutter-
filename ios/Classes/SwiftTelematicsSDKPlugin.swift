@@ -197,9 +197,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         let args = call.arguments as! [String: Any]
         let reason = args["reason"] as! String
         
-        RPEntry.instance.sendCustomHeartbeat(reason) { success, error in
-            result(nil)
-        }
+        RPEntry.instance.sendCustomHeartbeat(reason)
+        result(nil)
     }
     
     private func showPermissionWizard(_ call: FlutterMethodCall, _ result: @escaping FlutterReply) {

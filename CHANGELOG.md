@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.4
+
+* Updated iOS sdk version to 7.0.2
+
 ## 0.3.3
 
 * Updated Gradle version to 8.13
