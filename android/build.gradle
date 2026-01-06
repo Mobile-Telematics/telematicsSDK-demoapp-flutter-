@@ -3,7 +3,7 @@ version '2.0-SNAPSHOT'
 
 buildscript {
     ext.kotlin_version = '2.1.10'
-    ext.raxel_tracking = '3.1.1'
+    ext.raxel_tracking = '3.2.0'
     repositories {
         google()
         jcenter()
@@ -30,7 +30,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 35
+    compileSdkVersion 36
     namespace "com.telematicssdk"
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -44,6 +44,7 @@ android {
     }
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -60,6 +61,7 @@ android {
 
 dependencies {
     //noinspection GradleDependency
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.telematicssdk:tracking:$raxel_tracking"
 }
