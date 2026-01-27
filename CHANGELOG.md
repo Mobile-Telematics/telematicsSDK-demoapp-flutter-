@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1
+
+* Added Support SceneDelegate support for iOS module of telematics_sdk plugin. To add UISceneDelegate adoption follow guide: https://docs.flutter.dev/release/breaking-changes/uiscenedelegate
+* Dropped support for flutter versions below 3.38.0
+
 ## 0.4.0
 
 * Updated iOS sdk version to 7.0.3

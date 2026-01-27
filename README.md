@@ -147,19 +147,47 @@ Add permissions in your project's `ios/Runner/Info.plist`:
     </array>
 ```
 Starting from iOS version 15 and above, as well as Flutter 2.0.6, modification of `ios/Runner/AppDelegate.swift` is required 
-You must request permissions for the application before GeneratedPluginRegistrant
-    ```swift
-    @main
-    @objc class AppDelegate: FlutterAppDelegate {
+You must initialize TelematicsSDK before GeneratedPluginRegistrant.
+
+If your app doesn't support SceneDelegate and Flutter version if lower then 3.38, then follow this way:
+```swift
+import Flutter
+import UIKit
+import TelematicsSDK
+
+@main
+@objc class AppDelegate: FlutterAppDelegate {
     
-        override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-            RPEntry.initializeSDK()
-            RPEntry.instance.application(application, didFinishLaunchingWithOptions: launchOptions)
-            GeneratedPluginRegistrant.register(with: self)
-            return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-        }
+    override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        RPEntry.initializeSDK()
+        RPEntry.instance.application(application, didFinishLaunchingWithOptions: launchOptions)
+        GeneratedPluginRegistrant.register(with: self)
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
-    ```
+}
+```
+Otherwise, if Flutter version is 3.38 and higher, then you have to implement UISceneDelegate adoption for the app and follow this way:
+```swift
+import Flutter
+import UIKit
+import TelematicsSDK
+
+@main
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+
+    override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        RPEntry.initializeSDK()
+        RPEntry.instance.application(application, didFinishLaunchingWithOptions: launchOptions)
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+
+    func didInitializeImplicitFlutterEngine(_ engineBridge: any FlutterImplicitEngineBridge) {
+        GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    }
+}
+```
+A guide for Flutter iOS developers to adopt Apple's UISceneDelegate protocol is here:
+https://docs.flutter.dev/release/breaking-changes/uiscenedelegate
 
 ### Enabling and Disabling the SDK
 

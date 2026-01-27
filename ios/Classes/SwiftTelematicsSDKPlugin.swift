@@ -9,13 +9,13 @@ struct Constants {
     }
 }
 
-public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDelegate, RPTrackingStateListenerDelegate, RPAccuracyAuthorizationDelegate, RPRTDLDelegate, RPLocationDelegate {
+public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
     
-    private var channel: FlutterMethodChannel?
+    private let channel: FlutterMethodChannel
     
     public init(methodChannel: FlutterMethodChannel) {
+        self.channel = methodChannel
         super.init()
-        channel = methodChannel
         RPEntry.instance.lowPowerModeDelegate = self
         RPEntry.instance.locationDelegate = self
         RPEntry.instance.accuracyAuthorizationDelegate = self
@@ -28,6 +28,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         let instance = SwiftTelematicsSDKPlugin(methodChannel: channel)
         registrar.addMethodCallDelegate(instance, channel: channel)
         registrar.addApplicationDelegate(instance)
+        registrar.addSceneDelegate(instance)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -204,7 +205,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
     private func showPermissionWizard(_ call: FlutterMethodCall, _ result: @escaping FlutterReply) {
         RPPermissionsWizard.returnInstance().launch(finish: { _ in
             let wizardResult = RPEntry.instance.isAllRequiredPermissionsGranted() ? Constants.WizardResult.allGranted : Constants.WizardResult.notAllGranted
-            self.channel?.invokeMethod("onPermissionWizardResult", arguments: wizardResult)
+            self.channel.invokeMethod("onPermissionWizardResult", arguments: wizardResult)
         })
         result(nil)
     }
@@ -217,112 +218,6 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         RPEntry.instance.setAggressiveHeartbeats(value ?? prevValue)
         
         result(nil)
-    }
-    
-    //MARK: - Lifecycle handlers
-    
-    public func application(
-        _ application: UIApplication,
-        handleEventsForBackgroundURLSession identifier: String,
-        completionHandler: @escaping () -> Void
-    ) -> Bool {
-        RPEntry.instance.application(
-            application,
-            handleEventsForBackgroundURLSession: identifier,
-            completionHandler: completionHandler
-        )
-        return true
-    }
-    
-    public func applicationDidReceiveMemoryWarning(
-        _ application: UIApplication
-    ) {
-        RPEntry.instance.applicationDidReceiveMemoryWarning(
-            application
-        )
-    }
-    
-    public func applicationWillTerminate(
-        _ application: UIApplication
-    ) {
-        RPEntry.instance.applicationWillTerminate(
-            application
-        )
-    }
-    
-    public func applicationDidEnterBackground(
-        _ application: UIApplication
-    ) {
-        RPEntry.instance.applicationDidEnterBackground(
-            application
-        )
-    }
-    
-    public func applicationDidBecomeActive(
-        _ application: UIApplication
-    ) {
-        RPEntry.instance.applicationDidBecomeActive(
-            application
-        )
-    }
-    
-    public func applicationWillEnterForeground(
-        _ application: UIApplication
-    ) {
-        RPEntry.instance.applicationWillEnterForeground(
-            application
-        )
-    }
-    
-    public func application(
-        _ application: UIApplication,
-        performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
-    ) -> Bool {
-        RPEntry.instance.application(application) {
-            completionHandler(.newData)
-        }
-        return true
-    }
-    
-    //MARK: - Delegate callbacks
-    
-    /// Handle Low power
-    public func lowPowerMode(_ state: Bool) {
-        self.channel?.invokeMethod("onLowPowerMode", arguments: state)
-    }
-    
-    /// Handle Location change and Events
-    public func onLocationChanged(_ location: CLLocation) {
-        let latitude = location.coordinate.latitude as Double
-        let longitude = location.coordinate.longitude as Double
-        let json: [String : Any?] = [
-            "latitude": latitude,
-            "longitude": longitude
-        ]
-        self.channel?.invokeMethod("onLocationChanged", arguments: json)
-    }
-    
-    //TODO
-    public func onNewEvents(_ events: [RPEventPoint]) {
-        for event in events {
-            
-        }
-        //self.channel?.invokeMethod("onNewEvents", arguments: json)
-    }
-    
-    /// Handle Low accuracy mode
-    /// Notify user "Precise Location is off. Your trips may be not recorded. Please, follow to App Settings=>Location=>Precise Location"
-    public func wrongAccuracyAuthorization() {
-        //self.channel?.invokeMethod("onWrongAccuracyAuthorization", arguments: nil) //TO DO
-    }
-    
-    /// Handle Tracking status changing
-    public func trackingStateChanged(_ state: Bool) {
-        self.channel?.invokeMethod("onTrackingStateChanged", arguments: state)
-    }
-    
-    public func rtldColectedData() {
-        self.channel?.invokeMethod("onRtldCollectedData", arguments: true)
     }
     
     // MARK: - Tracks
@@ -498,6 +393,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
             return "OFFLINE"
         case .errorTagOperation:
             return "ERROR_TAG_OPERATION"
+        case .invalidDeviceToken:
+            return "INVALID_DEVICE_TOKEN"
         @unknown default:
             return ""
         }
@@ -536,7 +433,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
                 "tags": strTags,
                 "time": timestamp
             ]
-            self?.channel?.invokeMethod("onGetTags", arguments: json)
+            self?.channel.invokeMethod("onGetTags", arguments: json)
             result(nil)
         }
     }
@@ -589,7 +486,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
                 "activationTime": Int(futureTag.timestamp.timeIntervalSince1970)
             ]
             
-            self?.channel?.invokeMethod("onTagAdd", arguments: json)
+            self?.channel.invokeMethod("onTagAdd", arguments: json)
             result(nil)
         }
     }
@@ -642,7 +539,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
                 "activationTime": Int(futureTag.timestamp.timeIntervalSince1970)
             ]
             
-            self?.channel?.invokeMethod("onTagRemove", arguments: json)
+            self?.channel.invokeMethod("onTagRemove", arguments: json)
             result(nil)
         }
     }
@@ -655,7 +552,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
                 "time": 0
             ]
             
-            self?.channel?.invokeMethod("onAllTagsRemove", arguments: json)
+            self?.channel.invokeMethod("onAllTagsRemove", arguments: json)
             result(nil)
         }
     }
@@ -771,6 +668,137 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin, RPLowPowerModeDe
         result(RPEntry.instance.isRTDEnabled())
     }
     
+}
+
+// MARK: - App Delegate
+
+extension SwiftTelematicsSDKPlugin {
     
+    //MARK: - Lifecycle handlers
     
+    public func application(
+        _ application: UIApplication,
+        handleEventsForBackgroundURLSession identifier: String,
+        completionHandler: @escaping () -> Void
+    ) -> Bool {
+        RPEntry.instance.application(
+            application,
+            handleEventsForBackgroundURLSession: identifier,
+            completionHandler: completionHandler
+        )
+        return true
+    }
+    
+    public func applicationDidReceiveMemoryWarning(
+        _ application: UIApplication
+    ) {
+        RPEntry.instance.applicationDidReceiveMemoryWarning(
+            application
+        )
+    }
+    
+    public func applicationWillTerminate(
+        _ application: UIApplication
+    ) {
+        RPEntry.instance.applicationWillTerminate(
+            application
+        )
+    }
+    
+    public func application(
+        _ application: UIApplication,
+        performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) -> Bool {
+        RPEntry.instance.application(application) {
+            completionHandler(.newData)
+        }
+        return true
+    }
+    
+    public func applicationDidEnterBackground(_ application: UIApplication) {
+        RPEntry.instance.applicationDidEnterBackground(application)
+    }
+    
+    public func applicationWillEnterForeground(_ application: UIApplication) {
+        RPEntry.instance.applicationWillEnterForeground(application)
+    }
+    
+    public func applicationDidBecomeActive(_ application: UIApplication) {
+        RPEntry.instance.applicationDidBecomeActive(application)
+    }
+    
+}
+
+// MARK: - Scene Delegate
+extension SwiftTelematicsSDKPlugin: FlutterSceneLifeCycleDelegate {
+    
+    public func sceneDidDisconnect(_ scene: UIScene) { }
+    
+    public func sceneWillEnterForeground(_ scene: UIScene) {
+        RPEntry.instance.sceneWillEnterForeground(scene)
+    }
+    
+    public func sceneDidBecomeActive(_ scene: UIScene) {
+        RPEntry.instance.sceneDidBecomeActive(scene)
+    }
+    
+    public func sceneWillResignActive(_ scene: UIScene) { }
+    
+    public func sceneDidEnterBackground(_ scene: UIScene) {
+        RPEntry.instance.sceneDidEnterBackground(scene)
+    }
+    
+}
+
+// MARK: - RPLowPowerModeDelegate
+extension SwiftTelematicsSDKPlugin: RPLowPowerModeDelegate {
+    
+    public func lowPowerMode(_ state: Bool) {
+        self.channel.invokeMethod("onLowPowerMode", arguments: state)
+    }
+    
+}
+
+// MARK: - RPTrackingStateListenerDelegate
+extension SwiftTelematicsSDKPlugin: RPTrackingStateListenerDelegate {
+    
+    public func trackingStateChanged(_ state: Bool) {
+        self.channel.invokeMethod("onTrackingStateChanged", arguments: state)
+    }
+    
+}
+
+// MARK: - RPAccuracyAuthorizationDelegate
+extension SwiftTelematicsSDKPlugin: RPAccuracyAuthorizationDelegate {
+    
+    public func wrongAccuracyAuthorization() {
+        //self.channel?.invokeMethod("onWrongAccuracyAuthorization", arguments: nil) //TO DO
+    }
+    
+}
+
+// MARK: - RPRTDLDelegate
+extension SwiftTelematicsSDKPlugin: RPRTDLDelegate {
+    
+    public func rtldColectedData() {
+        self.channel.invokeMethod("onRtldCollectedData", arguments: true)
+    }
+    
+}
+
+extension SwiftTelematicsSDKPlugin: RPLocationDelegate {
+    
+    public func onLocationChanged(_ location: CLLocation) {
+        let latitude = location.coordinate.latitude as Double
+        let longitude = location.coordinate.longitude as Double
+        let json: [String : Any?] = [
+            "latitude": latitude,
+            "longitude": longitude
+        ]
+        self.channel.invokeMethod("onLocationChanged", arguments: json)
+    }
+    
+    public func onNewEvents(_ events: [RPEventPoint]) {
+        //self.channel?.invokeMethod("onNewEvents", arguments: json)
+    }
 }
