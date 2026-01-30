@@ -159,17 +159,17 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
 
     private func startManualTracking(_ result: @escaping FlutterResult) {
         RPEntry.instance.startTracking()
-        result(nil)
+        result(true)
     }
 
     private func startManualPersistentTracking(_ result: @escaping FlutterResult) {
         RPEntry.instance.startPersistentTracking()
-        result(nil)
+        result(true)
     }
 
     private func stopManualTracking(_ result: @escaping FlutterResult) {
         RPEntry.instance.stopTracking()
-        result(nil)
+        result(true)
     }
     
     private func uploadUnsentTrips(_ result: @escaping FlutterResult) {

@@ -59,7 +59,7 @@ class TrackingApi {
 
   Future<bool?> stopManualTracking() => _channel.invokeMethod('stopManualTracking');
 
-  Future<bool?> uploadUnsentTrips() => _channel.invokeMethod('uploadUnsentTrips');
+  Future<void> uploadUnsentTrips() => _channel.invokeMethod('uploadUnsentTrips');
 
   Future<int?> getUnsentTripCount() => _channel.invokeMethod('getUnsentTripCount');
 
