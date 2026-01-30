@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io' show Platform;
-import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:telematics_sdk/telematics_sdk.dart';
@@ -99,7 +98,6 @@ class _TitleScreenState extends State<TitleScreen> {
             maxLengthEnforcement: MaxLengthEnforcement.none,
             onFieldSubmitted: (token) {
               try {
-                final uuid = Uuid.parse(token, validate: true);
                 _onDeviceTokenUpdated(token: token);
               } on FormatException catch(e) {
                 _tokenEditingController.text = _deviceId;
@@ -269,7 +267,7 @@ class _TitleScreenState extends State<TitleScreen> {
       _isTracking = !disableTracking;
     }
 
-    await _trackingApi.setDisableWithUpload();
+    await _trackingApi.setEnableSdk(enable: false);
     _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
     setState(() {});
   }
@@ -277,7 +275,7 @@ class _TitleScreenState extends State<TitleScreen> {
   Future<void> _onLogout() async {
     _tokenEditingController.text = '';
     _deviceId = '';
-    await _trackingApi.clearDeviceID();
+    await _trackingApi.logout();
     setState(() {});
   }
 

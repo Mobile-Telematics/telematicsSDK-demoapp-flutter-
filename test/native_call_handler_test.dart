@@ -256,10 +256,9 @@ void main() {
       late Map<String, Object> result;
 
       setUp(() {
-        handler.onAllTagsRemove = (status, deactivatedTagsCount, time) {
+        handler.onAllTagsRemove = (status, time) {
           result = {
             'status': status,
-            'deactivatedTagsCount': deactivatedTagsCount,
             'time': time,
           };
         };

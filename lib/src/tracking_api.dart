@@ -1,17 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart';
 import 'package:telematics_sdk/src/data/accident_detection_sensitivity.dart';
 import 'package:telematics_sdk/src/data/api_language.dart';
-import 'package:telematics_sdk/src/data/track_tag.dart';
 import 'package:telematics_sdk/src/native_call_handler.dart';
 import 'package:telematics_sdk/src/data/future_track_callbacks.dart';
-import 'package:telematics_sdk/src/data/permission_wizard_result.dart';
-import 'package:telematics_sdk/src/data/track_processed.dart';
-
-import 'data/delegates_callbacks.dart';
-import 'data/track_location.dart';
+import 'package:telematics_sdk/src/data/models/permission_wizard_result.dart';
+import 'data/models/track_location.dart';
 
 class TrackingApi {
   static const _channel = MethodChannel('telematics_sdk');
@@ -36,34 +32,90 @@ class TrackingApi {
       _handler.onPermissionWizardClose;
   Stream<bool> get lowerPowerMode => _handler.lowerPowerMode;
   Stream<TrackLocation> get locationChanged => _handler.locationChanged;
-  //Stream<bool> get newEvents => _handler.newEvents; //TO DO
-  // Stream<bool> get wrongAccuracyAuthorization =>   //TO DO
-  //     _handler.wrongAccuracyAuthorization;
-  Stream<bool> get trackingStateChanged => _handler.trackingStateChanged;
-  Stream<String> get logEvent => _handler.logEvent;
-  Stream<String> get logWarning => _handler.logWarning;
-  Stream<SpeedLimitNotificationResult> get speedLimitNotification =>
-      _handler.speedLimitNotification;
-  Stream<HeartbeatSentResult> get heartbeatSent => _handler.heartbeatSent;
-  Stream<bool> get rtldCollectedData => _handler.rtldCollectedData;
 
-  /*
-  Initializes new RPEntry class instance with specified device ID. Must be the first method calling from Telematics SDK.
-  */
-  Future<void> initializeSdk() =>
-      _channel
-          .invokeMethod('initializeSdk');
-
-  Future<String?> getSdkVersion() => _channel.invokeMethod('getSdkVersion');
+  Future<bool?> isInitialized() => _channel.invokeMethod('isInitialized');
 
   Future<String?> getDeviceId() => _channel.invokeMethod('getDeviceId');
-
-  Future<void> clearDeviceID() => _channel.invokeMethod('clearDeviceID');
 
   Future<void> setDeviceID({required String deviceId}) =>
       _channel.invokeMethod('setDeviceID', {'deviceId': deviceId});
 
+  Future<void> logout() => _channel.invokeMethod('logout');
+
+  Future<bool?> isAllRequiredPermissionsAndSensorsGranted() =>
+      _channel.invokeMethod('isAllRequiredPermissionsAndSensorsGranted');
+
+  Future<bool?> isSdkEnabled() => _channel.invokeMethod('isSdkEnabled');
+
+  Future<bool?> isTracking() => _channel.invokeMethod('isTracking');
+
+  Future<void> setEnableSdk({required bool enable}) {
+    return _channel.invokeMethod('setEnableSdk', {'enable': enable});
+  }
+
+  Future<bool?> startManualTracking() => _channel.invokeMethod('startManualTracking');
+
+  Future<bool?> startManualPersistentTracking() => _channel.invokeMethod('startManualPersistentTracking');
+
+  Future<bool?> stopManualTracking() => _channel.invokeMethod('stopManualTracking');
+
+  Future<bool?> uploadUnsentTrips() => _channel.invokeMethod('uploadUnsentTrips');
+
+  Future<int?> getUnsentTripCount() => _channel.invokeMethod('getUnsentTripCount');
+
+  Future<bool?> sendCustomHeartbeats({required String reason}) {
+    return _channel.invokeMethod('sendCustomHeartbeats', {'reason': reason});
+  }
+
+  /// If [enableAggressivePermissionsWizard] set to `true` the wizard will be
+  /// finished if all required permissions granted (user can’t cancel it with
+  /// back button), otherwise if set to `false` the wizard can be finished with
+  /// not all granted permissions or cancelled with back button.
+  ///
+  /// If [enableAggressivePermissionsWizardPage] set to `true` the wizard will
+  /// slide to next page if requested permissions granted on current page,
+  /// otherwise if set to `false` the wizard can slide with not granted permissions.
+  Future<void> showPermissionWizard({
+    required bool enableAggressivePermissionsWizard,
+    required bool enableAggressivePermissionsWizardPage,
+  }) =>
+      _channel.invokeMethod('showPermissionWizard', {
+        'enableAggressivePermissionsWizard': enableAggressivePermissionsWizard,
+        'enableAggressivePermissionsWizardPage':
+        enableAggressivePermissionsWizardPage,
+      });
+
+  ///FutureTrackTags
+  Future<void> getFutureTrackTags() => _channel.invokeMethod('getFutureTrackTags');
+
+  Future<void> addFutureTrackTag({required String tag, required String source}) {
+    return _channel.invokeMethod('addFutureTrackTag', {'tag': tag, 'source': source});
+  }
+
+  Future<void> removeFutureTrackTag({required String tag}) {
+    return _channel.invokeMethod('removeFutureTrackTag', {'tag': tag});
+  }
+
+  Future<void> removeAllFutureTrackTags() =>
+      _channel.invokeMethod('removeAllFutureTrackTags');
+
+  Future<void> setAccidentDetectionSensitivity({required AccidentDetectionSensitivity sensitivity}) {
+    int value = 0;
+    switch (sensitivity) {
+      case AccidentDetectionSensitivity.normal:
+        value = 0;
+      case AccidentDetectionSensitivity.sensitive:
+        value = 1;
+      case AccidentDetectionSensitivity.tough:
+        value = 2;
+    }
+    return _channel
+        .invokeMethod('setAccidentDetectionSensitivity', {'accidentDetectionSensitivity': value});
+  }
+
+/// iOS Specific methods
   Future<ApiLanguage?> getApiLanguage() {
+    _ensureIOS();
     return _channel.invokeMethod<String>('getApiLanguage').then((value) {
       if (value == "None") {
         return ApiLanguage.none;
@@ -82,6 +134,7 @@ class TrackingApi {
   }
 
   Future<void> setApiLanguage({required ApiLanguage language}) {
+    _ensureIOS();
     var apiLanguage = '';
     switch (language) {
       case ApiLanguage.none:
@@ -99,62 +152,34 @@ class TrackingApi {
         .invokeMethod('setApiLanguage', {'apiLanguage': apiLanguage});
   }
 
-  Future<bool?> isWrongAccuracyState() =>
-      _channel.invokeMethod('isWrongAccuracyState');
+  Future<bool?> isWrongAccuracyState() {
+    _ensureIOS();
+    return _channel.invokeMethod('isWrongAccuracyState');
+  }
 
-  Future<bool?> isAllRequiredPermissionsAndSensorsGranted() =>
-      _channel.invokeMethod('isAllRequiredPermissionsAndSensorsGranted');
+  Future<bool?> setDisableTracking({required bool value}) {
+    _ensureIOS();
+    return _channel.invokeMethod('setDisableTracking', {'value': value});
+  }
 
-  Future<bool?> isSdkEnabled() => _channel.invokeMethod('isSdkEnabled');
-
-  Future<bool?> isTracking() => _channel.invokeMethod('isTracking');
-
-  ///SDK will be just enabled or disabled
-  /// depending on [enable] value.
-  Future<void> setEnableSdk({
-    required bool enable
-  }) =>
-      _channel.invokeMethod('setEnableSdk', {
-        'enable': enable
-      });
-
-  /// Disable SDK with enforced trip uploading
-  /// using this method, SDK will enforce trip uploading and then will be disabled.
-  Future<void> setDisableWithUpload() => _channel.invokeMethod('setDisableWithUpload');
-
-  Future<bool?> setDisableTracking({required bool value}) =>
-      _channel.invokeMethod('setDisableTracking', {'value': value});
-
-  Future<bool?> isDisableTracking() => _channel.invokeMethod('isDisableTracking');
-
-  Future<bool?> startManualTracking() => _channel.invokeMethod('startManualTracking');
-
-  Future<bool?> startManualPersistentTracking() => _channel.invokeMethod('startManualPersistentTracking');
-
-  Future<bool?> stopManualTracking() => _channel.invokeMethod('stopManualTracking');
-
-  Future<bool?> uploadUnsentTrips() => _channel.invokeMethod('uploadUnsentTrips');
-
-  Future<int?> getUnsentTripCount() => _channel.invokeMethod('getUnsentTripCount');
-
-  Future<bool?> sendCustomHeartbeats({required String reason}) =>
-      _channel.invokeMethod('sendCustomHeartbeats', {'reason': reason});
+  Future<bool?> isDisableTracking() {
+    _ensureIOS();
+    return _channel.invokeMethod('isDisableTracking');
+  }
 
   /// `SDK can work in two modes`:
   /// `Aggressive` - heartbeats are sent every 20 minutes and SDK never sleeps.
   /// `Normal` - heartbeats are sent every 20 minutes but when system suspends SDK,
   ///  it gees to a sleep mode and will restore work only in trip start time.
-  Future<bool?> isAggressiveHeartbeat() =>
-      _channel.invokeMethod('isAggressiveHeartbeat');
+  Future<bool?> isAggressiveHeartbeat() {
+    _ensureIOS();
+    return _channel.invokeMethod('isAggressiveHeartbeat');
+  }
 
-  //TO DO - change to return void (check)
-  Future<bool?> setAggressiveHeartbeats({required bool value}) =>
-      _channel.invokeMethod('setAggressiveHeartbeats', {'value': value});
-
-  Future<void> enableELM({required bool value}) =>
-      _channel.invokeMethod('enableELM', {'enableELM': value});
-
-  Future<bool?> isEnabledELM() => _channel.invokeMethod('isEnabledELM');
+  Future<void> setAggressiveHeartbeats({required bool value}) {
+    _ensureIOS();
+    return _channel.invokeMethod('setAggressiveHeartbeats', {'value': value});
+  }
 
   Future<void> enableAccidents({required bool value}) =>
       _channel.invokeMethod('enableAccidents', {'enableAccidents': value});
@@ -162,114 +187,11 @@ class TrackingApi {
   Future<bool?> isEnabledAccidents() =>
       _channel.invokeMethod('isEnabledAccidents');
 
-  Future<void> setAccidentDetectionSensitivity({required AccidentDetectionSensitivity sensitivity}) {
-    int value = 0;
-    switch (sensitivity) {
-      case AccidentDetectionSensitivity.normal:
-        value = 0;
-      case AccidentDetectionSensitivity.sensitive:
-        value = 1;
-      case AccidentDetectionSensitivity.tough:
-        value = 2;
-    }
-    return _channel
-        .invokeMethod('setAccidentDetectionSensitivity', {'accidentDetectionSensitivity': value});
-  }
-
   Future<bool?> isRTLDEnabled() => _channel.invokeMethod('isRTLDEnabled');
 
-  /// If [enableAggressivePermissionsWizard] set to `true` the wizard will be
-  /// finished if all required permissions granted (user can’t cancel it with
-  /// back button), otherwise if set to `false` the wizard can be finished with
-  /// not all granted permissions or cancelled with back button.
-  ///
-  /// If [enableAggressivePermissionsWizardPage] set to `true` the wizard will
-  /// slide to next page if requested permissions granted on current page,
-  /// otherwise if set to `false` the wizard can slide with not granted permissions.
-  Future<void> showPermissionWizard({
-    required bool enableAggressivePermissionsWizard,
-    required bool enableAggressivePermissionsWizardPage,
-  }) =>
-      _channel.invokeMethod('showPermissionWizard', {
-        'enableAggressivePermissionsWizard': enableAggressivePermissionsWizard,
-        'enableAggressivePermissionsWizardPage':
-            enableAggressivePermissionsWizardPage,
-      });
-
-  ///Tracks
-
-  //Requests all tracks with specified offset and limit. Can be filtered by passing non-nil start & end dates.
-
-  //TO DO - add getTracks function to SwiftTelematicsSDKPlugin
-  Future<Iterable<TrackProcessed>?> getTracks({
-    required int offset,
-    required int limit,
-    DateTime? startDate,
-    DateTime? endDate
-  }) => _channel.invokeMethod<Iterable<String>>('getTracks', {
-    'offset': offset,
-    'limit': limit,
-    'startDate': startDate?.toUtc().toIso8601String(),
-    'endDate': endDate?.toUtc().toIso8601String()
-  }).then(
-        (value) => value?.map(
-          (e) => TrackProcessed.fromJson(jsonDecode(e) as Map<String, dynamic>),
-    ),
-  );
-
-  ///TrackTags
-  Future<Iterable<TrackTag>?> getTrackTags({required String trackId}) =>
-      _channel.invokeMethod<Iterable<String>>('getTrackTags', {
-        'trackId': trackId,
-      }).then(
-        (value) => value?.map(
-          (e) => TrackTag.fromJson(jsonDecode(e) as Map<String, dynamic>),
-        ),
-      );
-
-  Future<Iterable<TrackTag>?> addTrackTags({
-    required String trackId,
-    required Iterable<TrackTag> tags,
-  }) =>
-      _channel.invokeMethod<Iterable<String>>('addTrackTags', {
-        'trackId': trackId,
-        'tags': tags.map((it) => jsonEncode(it.toJson))
-      }).then(
-        (value) => value?.map(
-          (e) => TrackTag.fromJson(jsonDecode(e) as Map<String, dynamic>),
-        ),
-      );
-
-  Future<Iterable<TrackTag>?> removeTrackTags({
-    required String trackId,
-    required Iterable<TrackTag> tags,
-  }) =>
-      _channel.invokeMethod<Iterable<String>>('removeTrackTags', {
-        'trackId': trackId,
-        'tags': tags.map((it) => jsonEncode(it.toJson))
-      }).then(
-        (value) => value?.map(
-          (e) => TrackTag.fromJson(jsonDecode(e) as Map<String, dynamic>),
-        ),
-      );
-
-  ///FutureTrackTags
-  Future<void> getFutureTrackTags() =>
-      _channel.invokeMethod('getFutureTrackTags');
-
-  Future<void> addFutureTrackTag({
-    required String tag,
-    required String source,
-  }) =>
-      _channel.invokeMethod('addFutureTrackTag', {
-        'tag': tag,
-        'source': source,
-      });
-
-  Future<void> removeFutureTrackTag({required String tag}) =>
-      _channel.invokeMethod('removeFutureTrackTag', {'tag': tag});
-
-  /// TODO: check iOS
-  Future<void> removeAllFutureTrackTags() =>
-      _channel.invokeMethod('removeAllFutureTrackTags');
+  void _ensureIOS() {
+    if (!Platform.isIOS) {
+      throw UnsupportedError('This method is only available on iOS.');
+    }
+  }
 }
