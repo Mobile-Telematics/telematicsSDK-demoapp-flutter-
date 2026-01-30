@@ -378,7 +378,6 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
         }
     }
     
-    
     /// wrongAccuracyAuthorization
     private func isWrongAccuracyState(_ result: @escaping FlutterResult) {
         result(RPEntry.instance.wrongAccuracyState)
@@ -574,7 +573,7 @@ extension SwiftTelematicsSDKPlugin: RPTrackingStateListenerDelegate {
 extension SwiftTelematicsSDKPlugin: RPAccuracyAuthorizationDelegate {
     
     public func wrongAccuracyAuthorization() {
-        //self.channel?.invokeMethod("onWrongAccuracyAuthorization", arguments: nil) //TO DO
+        self.channel.invokeMethod("onWrongAccuracyAuthorization", arguments: nil)
     }
     
 }
@@ -583,7 +582,7 @@ extension SwiftTelematicsSDKPlugin: RPAccuracyAuthorizationDelegate {
 extension SwiftTelematicsSDKPlugin: RPRTDLDelegate {
     
     public func rtldColectedData() {
-        self.channel.invokeMethod("onRtldCollectedData", arguments: true)
+        self.channel.invokeMethod("onRTLDCollectedData", arguments: nil)
     }
     
 }
@@ -600,7 +599,6 @@ extension SwiftTelematicsSDKPlugin: RPLocationDelegate {
         self.channel.invokeMethod("onLocationChanged", arguments: json)
     }
     
-    public func onNewEvents(_ events: [RPEventPoint]) {
-        //self.channel?.invokeMethod("onNewEvents", arguments: json)
-    }
+    public func onNewEvents(_ events: [RPEventPoint]) {}
+    
 }

@@ -33,6 +33,8 @@ class TrackingApi {
   Stream<bool> get lowPowerMode => _handler.lowPowerMode;
   Stream<TrackLocation> get locationChanged => _handler.locationChanged;
   Stream<bool> get trackingStateChanged => _handler.trackingStateChanged;
+  Stream<void> get iOSWrongAccuracyAuthorization => _handler.iOSWrongAccuracyAuthorization;
+  Stream<void> get iOSRTLDDataCollected => _handler.iOSRTLDDataCollected;
 
   Future<bool?> isInitialized() => _channel.invokeMethod('isInitialized');
 

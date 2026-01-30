@@ -19,11 +19,14 @@ class NativeCallHandler {
   Stream<bool> get lowPowerMode => _onLowPowerMode.stream;
   Stream<TrackLocation> get locationChanged => _onLocationChanged.stream;
   Stream<bool> get trackingStateChanged => _onTrackingStateChanged.stream;
+  Stream<void> get iOSWrongAccuracyAuthorization => _onIOSWrongAccuracyAuthorization.stream;
+  Stream<void> get iOSRTLDDataCollected => _onIOSRTLDDataCollected.stream;
 
   Future<Object> handle(MethodCall call) async {
     switch (call.method) {
       case 'onTrackingStateChanged':
         _onTrackingStateChangedHandler(call);
+        break;
       case 'onPermissionWizardResult':
         _onPermissionWizardResult(call);
         break;
@@ -32,6 +35,12 @@ class NativeCallHandler {
         break;
       case 'onLocationChanged':
         _onLocationChangedHandler(call);
+        break;
+      case 'onWrongAccuracyAuthorization':
+        _onIOSWrongAccuracyAuthorizationHandler(call);
+        break;
+      case 'onRTLDCollectedData':
+        _onIOSRTLDCollectedDataHandler(call);
         break;
       case 'onTagAdd':
         _onTagAdd(call);
@@ -54,6 +63,8 @@ class NativeCallHandler {
   final _onLowPowerMode = StreamController<bool>.broadcast();
   final _onLocationChanged = StreamController<TrackLocation>.broadcast();
   final _onTrackingStateChanged = StreamController<bool>.broadcast();
+  final _onIOSWrongAccuracyAuthorization = StreamController<void>.broadcast();
+  final _onIOSRTLDDataCollected = StreamController<void>.broadcast();
 
   void _onPermissionWizardResult(MethodCall call) {
     const wizardResultMapping = {
@@ -76,6 +87,14 @@ class NativeCallHandler {
   void _onLowPowerModeHandler(MethodCall call) {
     final state = call.arguments as bool;
     _onLowPowerMode.add(state);
+  }
+
+  void _onIOSWrongAccuracyAuthorizationHandler(MethodCall call) {
+    _onIOSWrongAccuracyAuthorization.add(null);
+  }
+
+  void _onIOSRTLDCollectedDataHandler(MethodCall call) {
+    _onIOSRTLDDataCollected.add(null);
   }
 
   void _onLocationChangedHandler(MethodCall call) {
