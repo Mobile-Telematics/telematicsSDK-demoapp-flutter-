@@ -94,8 +94,12 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "addFutureTrackTag" -> addFutureTrackTag(call, result)
             "removeFutureTrackTag" -> removeFutureTrackTag(call, result)
             "removeAllFutureTrackTags" -> removeAllFutureTrackTags(result)
-
             "setAccidentDetectionSensitivity" -> setAccidentDetectionSensitivity(call, result)
+            "isRTLDEnabled" -> isRtdEnabled(result)
+            "enableAccidents" -> enableAccidents(call, result)
+            "isEnabledAccidents" -> isAccidentDetectionEnabled(result)
+            "setAndroidAutoStartEnabled" -> setAutoStartEnabled(call, result)
+            "isAndroidAutoStartEnabled" -> isAutoStartEnabled(result)
             else -> result.notImplemented()
         }
     }
@@ -263,4 +267,31 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         result.success(null)
     }
 
+    private fun isRtdEnabled(result: Result) {
+        var isRtdEnabled = api.isRtdEnabled()
+        result.success(isRtdEnabled)
+    }
+
+    private fun enableAccidents(call: MethodCall, result: Result) {
+        val enable = call.argument<Boolean?>("enableAccidents") as Boolean
+        api.setAccidentDetectionEnabled(enable)
+        result.success(null)
+    }
+
+    private fun isAccidentDetectionEnabled(result: Result) {
+        var isEnabledAccidents = api.isAccidentDetectionEnabled()
+        result.success(isEnabledAccidents)
+    }
+
+    private fun setAutoStartEnabled(call: MethodCall, result: Result) {
+        val enable = call.argument<Boolean?>("enable") as Boolean
+        val permanent = call.argument<Boolean?>("permanent") as Boolean
+        api.setAutoStartEnabled(enable, permanent)
+        result.success(null)
+    }
+
+    private fun isAutoStartEnabled(result: Result) {
+        var isAutoStartEnabled = api.isAutoStartEnabled()
+        result.success(isAutoStartEnabled)
+    }
 }

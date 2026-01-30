@@ -113,6 +113,14 @@ class TrackingApi {
         .invokeMethod('setAccidentDetectionSensitivity', {'accidentDetectionSensitivity': value});
   }
 
+  Future<bool?> isRTLDEnabled() => _channel.invokeMethod('isRTLDEnabled');
+
+  Future<void> enableAccidents({required bool value}) =>
+      _channel.invokeMethod('enableAccidents', {'enableAccidents': value});
+
+  Future<bool?> isEnabledAccidents() =>
+      _channel.invokeMethod('isEnabledAccidents');
+
 /// iOS Specific methods
   Future<ApiLanguage?> getApiLanguage() {
     _ensureIOS();
@@ -152,21 +160,6 @@ class TrackingApi {
         .invokeMethod('setApiLanguage', {'apiLanguage': apiLanguage});
   }
 
-  Future<bool?> isWrongAccuracyState() {
-    _ensureIOS();
-    return _channel.invokeMethod('isWrongAccuracyState');
-  }
-
-  Future<bool?> setDisableTracking({required bool value}) {
-    _ensureIOS();
-    return _channel.invokeMethod('setDisableTracking', {'value': value});
-  }
-
-  Future<bool?> isDisableTracking() {
-    _ensureIOS();
-    return _channel.invokeMethod('isDisableTracking');
-  }
-
   /// `SDK can work in two modes`:
   /// `Aggressive` - heartbeats are sent every 20 minutes and SDK never sleeps.
   /// `Normal` - heartbeats are sent every 20 minutes but when system suspends SDK,
@@ -181,17 +174,51 @@ class TrackingApi {
     return _channel.invokeMethod('setAggressiveHeartbeats', {'value': value});
   }
 
-  Future<void> enableAccidents({required bool value}) =>
-      _channel.invokeMethod('enableAccidents', {'enableAccidents': value});
+  Future<void> setDisableTracking({required bool value}) {
+    _ensureIOS();
+    return _channel.invokeMethod('setDisableTracking', {'value': value});
+  }
 
-  Future<bool?> isEnabledAccidents() =>
-      _channel.invokeMethod('isEnabledAccidents');
+  Future<bool?> isDisableTracking() {
+    _ensureIOS();
+    return _channel.invokeMethod('isDisableTracking');
+  }
 
-  Future<bool?> isRTLDEnabled() => _channel.invokeMethod('isRTLDEnabled');
+  Future<bool?> isWrongAccuracyState() {
+    _ensureIOS();
+    return _channel.invokeMethod('isWrongAccuracyState');
+  }
+
+  Future<bool?> requestIOSLocationAlwaysPermission() {
+    _ensureIOS();
+    return _channel.invokeMethod('requestIOSLocationAlwaysPermission');
+  }
+
+  Future<bool?> requestIOSMotionPermission() {
+    _ensureIOS();
+    return _channel.invokeMethod('requestIOSMotionPermission');
+  }
+
+  ///Android specific
+  Future<void> setAndroidAutoStartEnabled({required bool enable, required bool permanent}) {
+    _ensureAndroid();
+    return _channel.invokeMethod('setAndroidAutoStartEnabled', {'enable': enable, 'permanent': permanent});
+  }
+
+  Future<bool?> isAndroidAutoStartEnabled() {
+    _ensureAndroid();
+    return _channel.invokeMethod('isAndroidAutoStartEnabled');
+  }
 
   void _ensureIOS() {
     if (!Platform.isIOS) {
       throw UnsupportedError('This method is only available on iOS.');
+    }
+  }
+
+  void _ensureAndroid() {
+    if (!Platform.isAndroid) {
+      throw UnsupportedError('This method is only available on Android.');
     }
   }
 }

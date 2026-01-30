@@ -73,27 +73,30 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
             removeAllFutureTrackTags(result)
         case "setAccidentDetectionSensitivity":
             setAccidentDetectionSensitivity(call, result)
-            
-            
-            
+        case "isRTLDEnabled":
+            isRTLDEnabled(result)
+        case "enableAccidents":
+            enableAccidents(call, result)
+        case "isEnabledAccidents":
+            isEnabledAccidents(result)
+        case "getApiLanguage":
+            getApiLanguage(result)
+        case "setApiLanguage":
+            setApiLanguage(call, result)
         case "setAggressiveHeartbeats":
             setAggressiveHeartbeats(call, result)
+        case "isAggressiveHeartbeat":
+            isAggressiveHeartbeat(result)
         case "isDisableTracking":
             isDisableTracking(result: result)
          case "setDisableTracking":
             setDisableTracking(call, result: result)
         case "isWrongAccuracyState":
             isWrongAccuracyState(result)
-        case "getApiLanguage":
-            getApiLanguage(result)
-        case "setApiLanguage":
-            setApiLanguage(call, result)
-        case "isAggressiveHeartbeat":
-            isAggressiveHeartbeat(result)
-        case "enableAccidents":
-            enableAccidents(call, result)
-        case "isRTLDEnabled":
-            isRTLDEnabled(result)
+        case "requestIOSLocationAlwaysPermission":
+            requestLocationAlwaysPermission(result)
+        case "requestIOSMotionPermission":
+            requestMotionPermission(result)
         default:
             result(FlutterError(code: FlutterPluginCode.failure,
                                 message: "not implemented",
@@ -147,7 +150,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
         let value = args["value"] as! Bool
         
         RPEntry.instance.disableTracking = value
-        result(value)
+        result(nil)
     }
     
     private func isDisableTracking(result: @escaping FlutterResult) {
@@ -196,11 +199,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     private func setAggressiveHeartbeats(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
-        let value = args["value"] as? Bool
-        
-        let prevValue = RPEntry.instance.aggressiveHeartbeat()
-        RPEntry.instance.setAggressiveHeartbeats(value ?? prevValue)
-        
+        let value = args["value"] as! Bool
+        RPEntry.instance.setAggressiveHeartbeats(value)
         result(nil)
     }
     
@@ -458,6 +458,16 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     private func isRTLDEnabled(_ result: @escaping FlutterResult) {
         result(RPEntry.instance.isRTDEnabled())
+    }
+    
+    private func requestLocationAlwaysPermission(_ result: @escaping FlutterResult) {
+        RPEntry.instance.requestLocationAlwaysPermission()
+        result(nil)
+    }
+    
+    private func requestMotionPermission(_ result: @escaping FlutterResult) {
+        RPEntry.instance.requestMotionPermission()
+        result(nil)
     }
     
 }
