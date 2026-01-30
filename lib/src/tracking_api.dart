@@ -2,12 +2,9 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart';
-import 'package:telematics_sdk/src/data/accident_detection_sensitivity.dart';
-import 'package:telematics_sdk/src/data/api_language.dart';
 import 'package:telematics_sdk/src/native_call_handler.dart';
 import 'package:telematics_sdk/src/data/future_track_callbacks.dart';
-import 'package:telematics_sdk/src/data/models/permission_wizard_result.dart';
-import 'data/models/track_location.dart';
+import 'package:telematics_sdk/telematics_sdk.dart';
 
 class TrackingApi {
   static const _channel = MethodChannel('telematics_sdk');
@@ -35,6 +32,7 @@ class TrackingApi {
   Stream<bool> get trackingStateChanged => _handler.trackingStateChanged;
   Stream<void> get iOSWrongAccuracyAuthorization => _handler.iOSWrongAccuracyAuthorization;
   Stream<void> get iOSRTLDDataCollected => _handler.iOSRTLDDataCollected;
+  Stream<SpeedViolation> get speedViolation => _handler.speedViolation;
 
   Future<bool?> isInitialized() => _channel.invokeMethod('isInitialized');
 
@@ -123,6 +121,10 @@ class TrackingApi {
 
   Future<bool?> isEnabledAccidents() =>
       _channel.invokeMethod('isEnabledAccidents');
+
+  Future<void> registerSpeedViolations({required double speedLimitKmH, required int speedLimitTimeout}) {
+    return _channel.invokeMethod('registerSpeedViolations', {'speedLimitKmH': speedLimitKmH, 'speedLimitTimeout': speedLimitTimeout});
+  }
 
 /// iOS Specific methods
   Future<ApiLanguage?> getApiLanguage() {

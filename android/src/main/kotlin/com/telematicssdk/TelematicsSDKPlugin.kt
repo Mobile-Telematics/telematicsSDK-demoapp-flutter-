@@ -295,4 +295,13 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         var isAutoStartEnabled = api.isAutoStartEnabled()
         result.success(isAutoStartEnabled)
     }
+
+    private fun registerSpeedViolations(call: MethodCall, result: Result) {
+        val speedLimitKmH = call.argument<Double>("speedLimitKmH") as Double
+        val speedLimitTimeout = call.argument<Long>("speedLimitTimeout") as Long
+        val speedLimitTimeoutMs = speedLimitTimeout * 1000;
+        api.registerSpeedViolations(speedLimitKmH.toFloat(), speedLimitTimeoutMs,
+            SpeedViolationsListenerImpl(channel))
+        result.success(null)
+    }
 }

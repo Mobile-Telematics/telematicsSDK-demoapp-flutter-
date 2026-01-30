@@ -12,6 +12,8 @@ struct Constants {
 public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     private let channel: FlutterMethodChannel
+    private var speedLimitTimeThreshold: TimeInterval = -1
+    private var speedLimitKmH: Double = -1
     
     public init(methodChannel: FlutterMethodChannel) {
         self.channel = methodChannel
@@ -97,6 +99,8 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
             requestLocationAlwaysPermission(result)
         case "requestIOSMotionPermission":
             requestMotionPermission(result)
+        case "registerSpeedViolations":
+            registerSpeedViolations(call, result)
         default:
             result(FlutterError(code: FlutterPluginCode.failure,
                                 message: "not implemented",
@@ -469,6 +473,16 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
         result(nil)
     }
     
+    private func registerSpeedViolations(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let speedLimitKmH = args["speedLimitKmH"] as! Double
+        let speedLimitTimeout = args["speedLimitTimeout"] as! Int
+        self.speedLimitKmH = speedLimitKmH
+        self.speedLimitTimeThreshold = Double(speedLimitTimeout)
+        RPEntry.instance.speedLimitDelegate = self
+        result(nil)
+    }
+    
 }
 
 // MARK: - App Delegate
@@ -600,5 +614,31 @@ extension SwiftTelematicsSDKPlugin: RPLocationDelegate {
     }
     
     public func onNewEvents(_ events: [RPEventPoint]) {}
+    
+}
+
+extension SwiftTelematicsSDKPlugin: RPSpeedLimitDelegate {
+    
+    public var timeThreshold: TimeInterval { speedLimitTimeThreshold }
+    public var speedLimit: Double { speedLimitKmH }
+    
+    public func speedLimitNotification(
+        _ speedLimit: Double,
+        speed: Double,
+        latitude: Double,
+        longitude: Double,
+        date: Date
+    ) {
+        let json: [String : Any?] = [
+            "date": Int(date.timeIntervalSince1970),
+            "latitude": latitude,
+            "longitude": longitude,
+            "speed": speed,
+            "speedLimit": speedLimit
+        ]
+        
+        self.channel.invokeMethod("onSpeedViolation", arguments: json)
+    }
+    
     
 }

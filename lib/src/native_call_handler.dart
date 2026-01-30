@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+import 'package:telematics_sdk/src/data/models/speed_violation.dart';
 import 'package:telematics_sdk/src/data/models/tag.dart';
 import 'package:telematics_sdk/src/data/models/status.dart';
 import 'package:telematics_sdk/src/data/future_track_callbacks.dart';
@@ -21,6 +22,7 @@ class NativeCallHandler {
   Stream<bool> get trackingStateChanged => _onTrackingStateChanged.stream;
   Stream<void> get iOSWrongAccuracyAuthorization => _onIOSWrongAccuracyAuthorization.stream;
   Stream<void> get iOSRTLDDataCollected => _onIOSRTLDDataCollected.stream;
+  Stream<SpeedViolation> get speedViolation => _onSpeedViolation.stream;
 
   Future<Object> handle(MethodCall call) async {
     switch (call.method) {
@@ -41,6 +43,8 @@ class NativeCallHandler {
         break;
       case 'onRTLDCollectedData':
         _onIOSRTLDCollectedDataHandler(call);
+      case 'onSpeedViolation':
+        _onSpeedViolationHandler(call);
         break;
       case 'onTagAdd':
         _onTagAdd(call);
@@ -65,6 +69,7 @@ class NativeCallHandler {
   final _onTrackingStateChanged = StreamController<bool>.broadcast();
   final _onIOSWrongAccuracyAuthorization = StreamController<void>.broadcast();
   final _onIOSRTLDDataCollected = StreamController<void>.broadcast();
+  final _onSpeedViolation = StreamController<SpeedViolation>.broadcast();
 
   void _onPermissionWizardResult(MethodCall call) {
     const wizardResultMapping = {
@@ -102,6 +107,22 @@ class NativeCallHandler {
     final longitude = call.arguments['longitude'] as double;
     final location = TrackLocation(latitude: latitude, longitude: longitude);
     _onLocationChanged.add(location);
+  }
+
+  void _onSpeedViolationHandler(MethodCall call) {
+    final date = call.arguments['date'] as int;
+    final latitude = call.arguments['latitude'] as double;
+    final longitude = call.arguments['longitude'] as double;
+    final speed = call.arguments['speed'] as double;
+    final speedLimit = call.arguments['speedLimit'] as double;
+    final speedViolation = SpeedViolation(
+        date: date,
+        latitude: latitude,
+        longitude: longitude,
+        speed: speed,
+        speedLimit: speedLimit
+    );
+    _onSpeedViolation.add(speedViolation);
   }
 
   void _onTagAdd(MethodCall call) {
