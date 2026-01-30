@@ -63,7 +63,7 @@ class TrackingApi {
 
   Future<int?> getUnsentTripCount() => _channel.invokeMethod('getUnsentTripCount');
 
-  Future<bool?> sendCustomHeartbeats({required String reason}) {
+  Future<void> sendCustomHeartbeats({required String reason}) {
     return _channel.invokeMethod('sendCustomHeartbeats', {'reason': reason});
   }
 
