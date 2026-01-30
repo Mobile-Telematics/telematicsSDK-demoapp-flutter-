@@ -30,8 +30,9 @@ class TrackingApi {
 
   Stream<PermissionWizardResult> get onPermissionWizardClose =>
       _handler.onPermissionWizardClose;
-  Stream<bool> get lowerPowerMode => _handler.lowerPowerMode;
+  Stream<bool> get lowPowerMode => _handler.lowPowerMode;
   Stream<TrackLocation> get locationChanged => _handler.locationChanged;
+  Stream<bool> get trackingStateChanged => _handler.trackingStateChanged;
 
   Future<bool?> isInitialized() => _channel.invokeMethod('isInitialized');
 

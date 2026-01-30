@@ -16,16 +16,19 @@ class NativeCallHandler {
 
   Stream<PermissionWizardResult> get onPermissionWizardClose =>
       _onPermissionWizardClose.stream;
-  Stream<bool> get lowerPowerMode => _onLowerPowerMode.stream;
+  Stream<bool> get lowPowerMode => _onLowPowerMode.stream;
   Stream<TrackLocation> get locationChanged => _onLocationChanged.stream;
+  Stream<bool> get trackingStateChanged => _onTrackingStateChanged.stream;
 
   Future<Object> handle(MethodCall call) async {
     switch (call.method) {
+      case 'onTrackingStateChanged':
+        _onTrackingStateChangedHandler(call);
       case 'onPermissionWizardResult':
         _onPermissionWizardResult(call);
         break;
       case 'onLowPowerMode':
-        _onLowPowerMode(call);
+        _onLowPowerModeHandler(call);
         break;
       case 'onLocationChanged':
         _onLocationChangedHandler(call);
@@ -48,8 +51,9 @@ class NativeCallHandler {
 
   final _onPermissionWizardClose =
       StreamController<PermissionWizardResult>.broadcast();
-  final _onLowerPowerMode = StreamController<bool>.broadcast();
+  final _onLowPowerMode = StreamController<bool>.broadcast();
   final _onLocationChanged = StreamController<TrackLocation>.broadcast();
+  final _onTrackingStateChanged = StreamController<bool>.broadcast();
 
   void _onPermissionWizardResult(MethodCall call) {
     const wizardResultMapping = {
@@ -64,9 +68,14 @@ class NativeCallHandler {
     }
   }
 
-  void _onLowPowerMode(MethodCall call) {
+  void _onTrackingStateChangedHandler(MethodCall call) {
     final state = call.arguments as bool;
-    _onLowerPowerMode.add(state);
+    _onTrackingStateChanged.add(state);
+  }
+
+  void _onLowPowerModeHandler(MethodCall call) {
+    final state = call.arguments as bool;
+    _onLowPowerMode.add(state);
   }
 
   void _onLocationChangedHandler(MethodCall call) {

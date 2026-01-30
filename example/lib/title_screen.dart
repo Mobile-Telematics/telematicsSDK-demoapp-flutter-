@@ -35,7 +35,7 @@ class _TitleScreenState extends State<TitleScreen> {
     super.initState();
     _onPermissionWizardStateChanged =
         _trackingApi.onPermissionWizardClose.listen(_onPermissionWizardResult);
-    _onLowerPower = _trackingApi.lowerPowerMode.listen(_onLowPowerResult);
+    _onLowerPower = _trackingApi.lowPowerMode.listen(_onLowPowerResult);
     _onLocationChanged = _trackingApi.locationChanged.listen(_onLocationChangedResult);
     initPlatformState();
   }
