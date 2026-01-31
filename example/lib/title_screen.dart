@@ -124,12 +124,8 @@ class _TitleScreenState extends State<TitleScreen> {
             ],
           ),
           ElevatedButton(
-            onPressed: _isSdkEnabled ? _onForceDisableSDK : null,
-            child: const Text('Force Disable SDK with upload'),
-          ),
-          ElevatedButton(
             onPressed: !_isSdkEnabled && _deviceId.isNotEmpty ? _onLogout : null,
-            child: const Text('Clear Device Token'),
+            child: const Text('Logout'),
           ),
           _sizedBoxSpace,
           ElevatedButton(
@@ -239,23 +235,6 @@ class _TitleScreenState extends State<TitleScreen> {
   }
 
   Future<void> _onDisableSDK() async {
-    if (_isManualTracking) {
-      await _trackingApi.stopManualTracking();
-      _isManualTracking = false;
-    }
-
-    if (Platform.isIOS) {
-      await _trackingApi.setDisableTracking(value: true);
-      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
-      _isTracking = !disableTracking;
-    }
-
-    await _trackingApi.setEnableSdk(enable: false);
-    _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
-    setState(() {});
-  }
-
-  Future<void> _onForceDisableSDK() async {
     if (_isManualTracking) {
       await _trackingApi.stopManualTracking();
       _isManualTracking = false;
