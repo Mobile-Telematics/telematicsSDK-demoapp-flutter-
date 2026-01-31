@@ -29,7 +29,6 @@ class TagsProcessingListenerImp(private val channel: MethodChannel) : TagsProces
     override fun onAllTagsRemove(status: Status, deactivatedTagsCount: Int, time: Long) {
         val json = mapOf<String, Any>(
                 "status" to status.name,
-                "deactivatedTagsCount" to deactivatedTagsCount,
                 "time" to time
         )
 

@@ -8,6 +8,7 @@ class Status {
   static const Status errorInvalidTagSpecified =
       Status._('ERROR_INVALID_TAG_SPECIFIED');
   static const Status errorWrongTime = Status._('ERROR_WRONG_TIME');
+  static const Status invalidDeviceToken = Status._('INVALID_DEVICE_TOKEN');
   static const Status someError = Status._('SOME_ERROR');
 
   static const _values = {
@@ -16,6 +17,7 @@ class Status {
     'ERROR_TAG_OPERATION': Status.errorTagOperation,
     'ERROR_INVALID_TAG_SPECIFIED': Status.errorInvalidTagSpecified,
     'ERROR_WRONG_TIME': Status.errorWrongTime,
+    'INVALID_DEVICE_TOKEN': Status.invalidDeviceToken
   };
 
   final String _value;

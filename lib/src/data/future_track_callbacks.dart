@@ -1,5 +1,5 @@
-import 'package:telematics_sdk/src/data/status.dart';
-import 'package:telematics_sdk/src/data/tag.dart';
+import 'package:telematics_sdk/src/data/models/status.dart';
+import 'package:telematics_sdk/src/data/models/tag.dart';
 
 typedef OnTagAddCallback = void Function(
   Status status,
@@ -15,7 +15,6 @@ typedef OnTagRemoveCallback = void Function(
 
 typedef OnAllTagsRemoveCallback = void Function(
   Status status,
-  int deactivatedTagsCount,
   int time,
 );
 

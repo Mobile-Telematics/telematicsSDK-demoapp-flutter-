@@ -24,7 +24,7 @@ add to file ./app/src/main/AndroidManifest.xml props:
 
 as shown below:
 
-``` xml
+```xml
 <manifest
     xmlns:tools="http://schemas.android.com/tools">
     <application
@@ -33,42 +33,36 @@ as shown below:
     </application>
     ...
 </manifest>
-
 ```
 
 add network permissions
 
-``` xml
+```xml
 <manifest>
-...
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-...
+</manifest>
 ```
 
 #### build.gradle
 
 add to file (module)/build.gradle props:
 
-``` groovy
+```groovy
     android {
-    ...
         buildTypes {
             release {
-                ...
                 shrinkResources false
                 minifyEnabled false
-                ...
             }
         }
-    ...
     }
 ```
 
 #### Proguard
 
-``` markdown
+```markdown
 -keep public class com.telematicssdk.tracking.** {*;}
 ```
 
@@ -78,18 +72,18 @@ add to file (module)/build.gradle props:
 
 1. Override application class extends __TelematicsSDKApp__
 
-    ``` kotlin
-    import com.telematicssdk.TelematicsSDKApp
+```kotlin
+import com.telematicssdk.TelematicsSDKApp
 
-    class App: TelematicsSDKApp() {
+class App: TelematicsSDKApp() {
     
-        override fun onCreate() {
-            val api = TrackingApi.getInstance()
-            api.initialize(this, setTelematicsSettings())
-            super.onCreate()
-        }
+    override fun onCreate() {
+        val api = TrackingApi.getInstance()
+        api.initialize(this, setTelematicsSettings())
+        super.onCreate()
+    }
         
-        override fun setTelematicsSettings(): Settings {
+    override fun setTelematicsSettings(): Settings { 
         val settings = Settings(
             stopTrackingTimeout = Settings.stopTrackingTimeHigh, 
             accuracy = Settings.accuracyHigh,
@@ -100,32 +94,28 @@ add to file (module)/build.gradle props:
         return settings
     }
 }
-    ```
+```
 
 2. add to tag __application__ of file ./app/src/main/AndroidManifest.xml this class __name__:
 
-    ``` xml
-    <application
-            android:name=".App">
-        ...
-    </application>
-
-    ```
+```xml
+<application
+    android:name=".App">
+</application>
+```
 
 3. add Telematics SDK repository into (module)/build.gradle
-
-    ```groovy
-    dependencies {
-        //...
-        implementation "com.telematicssdk:tracking:3.2.0"
-    }
-    ```
+```groovy
+dependencies {
+    implementation "com.telematicssdk:tracking:3.2.0"
+}
+```
 
 ### iOS
 
 Add permissions in your project's `ios/Runner/Info.plist`:
 
-``` xml
+```xml
     <key>UIBackgroundModes</key>
     <array>
         <string>fetch</string>
@@ -192,104 +182,167 @@ https://docs.flutter.dev/release/breaking-changes/uiscenedelegate
 ### Enabling and Disabling the SDK
 
 Firstly, create trackingAPI object to interact with SDK
-``` dart
+```dart
 import 'package:telematics_sdk/telematics_sdk.dart';
 
 final _trackingApi = TrackingApi();
 ```
 
 **Login**
-``` dart
-    await _trackingApi.setDeviceID(deviceId: "DEVICE_TOKEN");
+```dart
+await _trackingApi.setDeviceID(deviceId: 'DEVICE_TOKEN');
 ```
 
 **Logout**
-``` dart
-    await _trackingApi.clearDeviceID();
+```dart
+await _trackingApi.clearDeviceID();
 ```
 
 **Enable the SDK**
-
-``` dart
-    await _trackingApi.setEnableSdk(enable: true);
+```dart
+await _trackingApi.setEnableSdk(enable: true);
 ```
 
 **Disable the SDK**
-
-``` dart
-    await _trackingApi.setEnableSdk(enable: false);
+```dart
+await _trackingApi.setEnableSdk(enable: false);
 ```
 
-**Disable the SDK with force uploading data**
+---
 
-``` dart
-    await _trackingApi.setDisableWithUpload();
-```
-
-### Available Methods
+### Additional Available Methods
 
 **Manual start tracking**
-``` dart
-    await _trackingApi.startManualTracking();
+```dart
+await _trackingApi.startManualTracking();
 ```
 
 **Manual start persistent tracking**
-``` dart
-    await _trackingApi.startManualPersistentTracking();
+```dart
+await _trackingApi.startManualPersistentTracking();
 ```
-
 **Notes:**
-Persistent tracking ignores all stop tracking reasons and continues before 'stopTracking' method will be called. 
+Persistent tracking ignores all stop tracking reasons and continues before 'stopManualTracking' method will be called.
 Max persistent tracking duration is 10 hours.
 
 **Manual stop tracking**
-``` dart
-    await _trackingApi.stopManualTracking();
+```dart
+await _trackingApi.stopManualTracking();
+```
+
+**Check SDK initialization state**
+```dart
+final initialized = await _trackingApi.isInitialized();
+```
+
+**Get current device ID**
+```dart
+final deviceId = await _trackingApi.getDeviceId();
+```
+
+**Check all required permissions and sensors**
+```dart
+final granted = await _trackingApi.isAllRequiredPermissionsAndSensorsGranted();
+```
+
+**Check SDK enabled state**
+```dart
+final enabled = await _trackingApi.isSdkEnabled();
+```
+
+**Check RTLD (Real-Time Data Logging) status**
+```dart
+final rtldEnabled = await _trackingApi.isRTLDEnabled();
+```
+
+**Register speed limit violations monitoring**
+```dart
+await _trackingApi.registerSpeedViolations(
+  speedLimitKmH: 90.0,
+  speedLimitTimeout: 60,
+);
+```
+
+**Listen for speed violations**
+```dart
+final sub = _trackingApi.speedViolation.listen((event) {
+  // Handle speed violation
+});
+```
+
+**Listen for location updates**
+```dart
+final sub = _trackingApi.locationChanged.listen((location) {
+  // Handle location update
+});
+```
+
+**Listen for tracking state changes**
+```dart
+final sub = _trackingApi.trackingStateChanged.listen((active) {
+  // true = started, false = stopped
+});
+```
+
+**Listen for Low Power Mode changes**
+```dart
+final sub = _trackingApi.lowPowerMode.listen((enabled) {
+  // Power saving mode changed
+});
 ```
 
 **Upload unsent trips**
-``` dart
-    await _trackingApi.uploadUnsentTrips();
+```dart
+await _trackingApi.uploadUnsentTrips();
 ```
 
-**Get unsent trips**
-``` dart
-    final unsentTripsCount = await _trackingApi.getUnsentTripCount();
-```
-
-**Get unsent trips**
-``` dart
-    final unsentTripsCount = await _trackingApi.getUnsentTripCount();
+**Get unsent trips count**
+```dart
+final unsentTripsCount = await _trackingApi.getUnsentTripCount();
 ```
 
 **Send a custom heartbeat**
-``` dart
-    String reason = 'CustomHeartbeat';
-    await _trackingApi.sendCustomHeartbeats(reason: reason);
+```dart
+await _trackingApi.sendCustomHeartbeats(reason: 'CustomHeartbeat');
 ```
 
 **Tracking status**
-``` dart
-    final isTracking = await _trackingApi.isTracking();
+```dart
+final isTracking = await _trackingApi.isTracking();
+```
+
+**Enable Accidents detection**
+Accidents detection is disabled by default. You can enable detection.
+In order for accidents detection to work, you need to [enable high-frequency data collection](https://docs.damoov.com/docs/methods-for-ios-app#enable-high-frequency-data-collection-hf)
+```dart
+await _trackingApi.enableAccidents(value: true);
+//to check current accidents status
+final isEnabledAccidents = await _trackingApi.isEnabledAccidents();
+```
+
+**Change Accident detection sensitivity**
+Accident detection sensitivity is normal by default. You can change sensitivity. Sensitivity options which is available to apply: .normal, .sensitive, .tough
+```dart
+await _trackingApi.setAccidentDetectionSensitivity(sensitivity: AccidentDetectionSensitivity.normal);
 ```
 
 **Create new tag**
 The detailed information about using Tags is available [here](https://docs.damoov.com/docs/ios-sdk-incoming-tags)
-``` dart
-    String tag = 'TAG';
-    String source = 'App';
-    await _trackingApi.addFutureTrackTag(tag: tag, source: source);
+```dart
+String tag = 'TAG';
+String source = 'App';
+await _trackingApi.addFutureTrackTag(tag: tag, source: source);
 ```
 
 **Remove a tag**
-``` dart
-    String tag = 'TAG';
-    await _trackingApi.removeFutureTrackTag(tag: tag);
+```dart
+String tag = 'TAG';
+await _trackingApi.removeFutureTrackTag(tag: tag);
 ```
 
 **Remove all tags**
-``` dart
-    await _trackingApi.removeAllFutureTrackTags();
+```dart
+await _trackingApi.removeAllFutureTrackTags();
 ```
 
 **Setting up the permission wizard**
@@ -298,30 +351,30 @@ If you want to use your own way to request permissions, you can skip this part.
 
 To show the permission wizard, follow next steps:
 1. Create and init **StreamSubscription** in your widget
-``` dart
-    late StreamSubscription<PermissionWizardResult?> _onPermissionWizardStateChanged;
+```dart
+late StreamSubscription<PermissionWizardResult?> _onPermissionWizardStateChanged;
     
-    @override
-    void initState() {
-        _onPermissionWizardStateChanged = _trackingApi
-        .onPermissionWizardClose
-        .listen(_onPermissionWizardResult);
+@override
+void initState() {
+  _onPermissionWizardStateChanged = _trackingApi
+      .onPermissionWizardClose
+      .listen(_onPermissionWizardResult);
+}
         
-    void _onPermissionWizardResult(PermissionWizardResult result) {
-        if (result == PermissionWizardResult.allGranted) {
-            //All permissions are granted. To do something here.
-        } else {
-            //Permissions are not granted. To do something here.
-        }
-    }
+void _onPermissionWizardResult(PermissionWizardResult result) {
+  if (result == PermissionWizardResult.allGranted) {
+    //All permissions are granted. To do something here.
+  } else {
+    //Permissions are not granted. To do something here.
+  }
+}
 ```
 2. Request to show the permission wizard
-
-``` dart
-    await _trackingApi.showPermissionWizard(
-        enableAggressivePermissionsWizard: false, 
-        enableAggressivePermissionsWizardPage: true
-    );
+```dart
+await _trackingApi.showPermissionWizard(
+enableAggressivePermissionsWizard: false, 
+enableAggressivePermissionsWizardPage: true
+);
 ```
 If `[enableAggressivePermissionsWizard]` set to `true` the wizard will be finished if all required permissions granted (user can’t cancel it with back button), otherwise if set to `false` the wizard can be finished with not all granted permissions or cancelled with back button.
 
@@ -330,16 +383,45 @@ If `[enableAggressivePermissionsWizardPage]` set to `true` the wizard will slide
 
 ### Available Methods (iOS only)
 
+**Check wrong accuracy state (Reduced Accuracy)**
+```dart
+final wrongAccuracy = await _trackingApi.isWrongAccuracyState();
+```
+
+**Request Always Location permission**
+```dart
+await _trackingApi.requestIOSLocationAlwaysPermission();
+```
+
+**Request Motion permission**
+```dart
+await _trackingApi.requestIOSMotionPermission();
+```
+
+**Listen for wrong accuracy events**
+```dart
+_trackingApi.iOSWrongAccuracyAuthorization.listen((_) {
+  // Reduced accuracy detected
+});
+```
+
+**Listen for RTLD events**
+```dart
+_trackingApi.iOSRTLDDataCollected.listen((_) {
+  // RTLD data collected
+});
+```
+
 **Enable/Disable Automatic tracking**
-``` dart
-    bool disableTracking = false;
-    //true to disable automatic tracking (tracking is enabled by default)
-    await _trackingApi.setDisableTracking(value: disableTracking);
+```dart
+bool disableTracking = false;
+//true to disable automatic tracking (tracking is enabled by default)
+await _trackingApi.setDisableTracking(value: disableTracking);
 ```
 
 **Automatic tracking status**
-``` dart
-    final isTrackingDisabled = await _trackingApi.isDisableTracking();
+```dart
+final isTrackingDisabled = await _trackingApi.isDisableTracking();
 ```
 
 **Enable/Disable Aggressive Heartbeats**
@@ -351,30 +433,30 @@ The telematics SDK (iOS only) supports two operational modes for heartbeats;
 
 **Mode switcher**
 
-``` dart
-    bool enable = true; //false to disable aggressive heartbeats
-    await _trackingApi.setAggressiveHeartbeats(value: enable)
+```dart
+bool enable = true; //false to disable aggressive heartbeats
+await _trackingApi.setAggressiveHeartbeats(value: enable)
 ```
 
 **Check state**
-``` dart
-    final isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeat()
+```dart
+final isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeat()
+```
+---
+
+### Available Methods (Android only)
+
+**Enable / Disable SDK auto-start**
+```dart
+await _trackingApi.setAndroidAutoStartEnabled(
+  enable: true,
+  permanent: true,
+);
 ```
 
-**Enable Accidents detection**
-Accidents detection is disabled by default. You can enable detection.
-In order for accidents detection to work, you need to [enable high-frequency data collection](https://docs.damoov.com/docs/methods-for-ios-app#enable-high-frequency-data-collection-hf)
-``` dart
-    await _trackingApi.enableAccidents(value: true);
-    
-    //to check current accidents status
-    final isEnabledAccidents = await _trackingApi.isEnabledAccidents();
-```
-
-**Change Accident detection sensitivity**
-Accident detection sensitivity is normal by default. You can change sensitivity. Sensitivity options which is available to apply: .normal, .sensitive, .tough
-``` dart
-    await _trackingApi.setAccidentDetectionSensitivity(sensitivity: AccidentDetectionSensitivity.normal);
+**Check SDK auto-start status**
+```dart
+final autoStartEnabled = await _trackingApi.isAndroidAutoStartEnabled();
 ```
 
 ## Links

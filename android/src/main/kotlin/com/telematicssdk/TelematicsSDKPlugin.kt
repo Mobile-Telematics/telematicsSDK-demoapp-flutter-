@@ -55,6 +55,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         /// register callbacks
         api.addTagsProcessingCallback(TagsProcessingListenerImp(channel))
         api.setLocationListener(LocationListenerImp(channel))
+        api.registerCallback((TrackingStateListenerImpl(channel)))
     }
 
     override fun onDetachedFromActivity() {
@@ -75,31 +76,31 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
-            "clearDeviceID" -> clearDeviceID(result)
+            "isInitialized" -> isInitialized(result)
             "getDeviceId" -> getDeviceId(result)
-            "isAllRequiredPermissionsAndSensorsGranted" -> isAllRequiredPermissionsAndSensorsGranted(
-                result,
-            )
+            "setDeviceID" -> setDeviceID(call, result)
+            "logout" -> logout(result)
+            "isAllRequiredPermissionsAndSensorsGranted" -> isAllRequiredPermissionsAndSensorsGranted(result)
             "isSdkEnabled" -> isSdkEnabled(result)
             "isTracking" -> isTracking(result)
-            "setDeviceID" -> setDeviceID(call, result)
             "setEnableSdk" -> setEnableSdk(call, result)
-            "setDisableWithUpload" -> setDisableWithUpload(result)
             "startManualTracking" -> startManualTracking(result)
             "startManualPersistentTracking" -> startManualPersistentTracking(result)
             "stopManualTracking" -> stopManualTracking(result)
+            "uploadUnsentTrips" -> uploadUnsentTrips(result)
+            "getUnsentTripCount" -> getUnsentTripCount(result)
+            "sendCustomHeartbeats" -> sendCustomHeartbeats(call, result)
             "showPermissionWizard" -> showPermissionWizard(call, result)
-            "getTrackTags" -> getTrackTags(call, result)
-            "addTrackTags" -> addTrackTags(call, result)
-            "removeTrackTags" -> removeTrackTags(call, result)
             "getFutureTrackTags" -> getFutureTrackTags(result)
             "addFutureTrackTag" -> addFutureTrackTag(call, result)
             "removeFutureTrackTag" -> removeFutureTrackTag(call, result)
             "removeAllFutureTrackTags" -> removeAllFutureTrackTags(result)
-            "uploadUnsentTrips" -> uploadUnsentTrips(result)
-            "getUnsentTripCount" -> getUnsentTripCount(result)
-            "sendCustomHeartbeats" -> sendCustomHeartbeats(call, result)
             "setAccidentDetectionSensitivity" -> setAccidentDetectionSensitivity(call, result)
+            "isRTLDEnabled" -> isRtdEnabled(result)
+            "enableAccidents" -> enableAccidents(call, result)
+            "isEnabledAccidents" -> isAccidentDetectionEnabled(result)
+            "setAndroidAutoStartEnabled" -> setAutoStartEnabled(call, result)
+            "isAndroidAutoStartEnabled" -> isAutoStartEnabled(result)
             else -> result.notImplemented()
         }
     }
@@ -124,8 +125,13 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         return false
     }
 
-    private fun clearDeviceID(result: Result) {
-        api.clearDeviceID()
+    private fun isInitialized(result: Result) {
+        var isInitialized = api.isInitialized()
+        result.success(isInitialized)
+    }
+
+    private fun logout(result: Result) {
+        api.logout()
 
         result.success(null)
     }
@@ -149,7 +155,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
     }
 
     private fun isAllRequiredPermissionsAndSensorsGranted(result: Result) {
-        val isGranted = api.isAllRequiredPermissionsAndSensorsGranted()
+        val isGranted = api.areAllRequiredPermissionsAndSensorsGranted()
 
         result.success(isGranted)
     }
@@ -165,11 +171,6 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
     private fun setEnableSdk(call: MethodCall, result: Result) {
         val enable = call.argument<Boolean?>("enable") as Boolean
         api.setEnableSdk(enable)
-        result.success(null)
-    }
-
-    private fun setDisableWithUpload(result: Result) {
-        api.setDisableWithUpload()
         result.success(null)
     }
 
@@ -224,46 +225,6 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         result.success(null)
     }
 
-    private fun getTrackTags(call: MethodCall, result: Result) {
-        val trackId = call.argument<String?>("trackId") as String
-
-        val res = api.getTrackTags(trackId).map { it.toJsonString() }.toTypedArray()
-
-        result.success(res)
-    }
-
-    private fun addTrackTags(call: MethodCall, result: Result) {
-        val trackId = call.argument<String?>("trackId") as String
-        val strings = call.argument<Array<String>?>("tags") as Array<String>
-
-        val tags = strings.map {
-            val json = JSONObject(it)
-            val tag = json["tag"] as String
-            val source = json["source"] as String
-            TrackTag(tag, source)
-        }.toTypedArray()
-
-        val res = api.addTrackTags(trackId, tags).map { it.toJsonString() }.toTypedArray()
-
-        result.success(res)
-    }
-
-    private fun removeTrackTags(call: MethodCall, result: Result) {
-        val trackId = call.argument<String?>("trackId") as String
-        val strings = call.argument<Array<String>?>("tags") as Array<String>
-
-        val tags = strings.map {
-            val json = JSONObject(it)
-            val tag = json["tag"] as String
-            val source = json["source"] as String
-            TrackTag(tag, source)
-        }.toTypedArray()
-
-        val res = api.removeTrackTags(trackId, tags).map { it.toJsonString() }.toTypedArray()
-
-        result.success(res)
-    }
-
     private fun getFutureTrackTags(result: Result) {
         api.getFutureTrackTags()
 
@@ -307,4 +268,40 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         result.success(null)
     }
 
+    private fun isRtdEnabled(result: Result) {
+        var isRtdEnabled = api.isRtdEnabled()
+        result.success(isRtdEnabled)
+    }
+
+    private fun enableAccidents(call: MethodCall, result: Result) {
+        val enable = call.argument<Boolean?>("enableAccidents") as Boolean
+        api.setAccidentDetectionEnabled(enable)
+        result.success(null)
+    }
+
+    private fun isAccidentDetectionEnabled(result: Result) {
+        var isEnabledAccidents = api.isAccidentDetectionEnabled()
+        result.success(isEnabledAccidents)
+    }
+
+    private fun setAutoStartEnabled(call: MethodCall, result: Result) {
+        val enable = call.argument<Boolean?>("enable") as Boolean
+        val permanent = call.argument<Boolean?>("permanent") as Boolean
+        api.setAutoStartEnabled(enable, permanent)
+        result.success(null)
+    }
+
+    private fun isAutoStartEnabled(result: Result) {
+        var isAutoStartEnabled = api.isAutoStartEnabled()
+        result.success(isAutoStartEnabled)
+    }
+
+    private fun registerSpeedViolations(call: MethodCall, result: Result) {
+        val speedLimitKmH = call.argument<Double>("speedLimitKmH") as Double
+        val speedLimitTimeout = call.argument<Long>("speedLimitTimeout") as Long
+        val speedLimitTimeoutMs = speedLimitTimeout * 1000;
+        api.registerSpeedViolations(speedLimitKmH.toFloat(), speedLimitTimeoutMs,
+            SpeedViolationsListenerImpl(channel))
+        result.success(null)
+    }
 }

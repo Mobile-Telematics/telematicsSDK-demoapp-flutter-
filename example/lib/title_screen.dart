@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io' show Platform;
-import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:telematics_sdk/telematics_sdk.dart';
@@ -36,7 +35,7 @@ class _TitleScreenState extends State<TitleScreen> {
     super.initState();
     _onPermissionWizardStateChanged =
         _trackingApi.onPermissionWizardClose.listen(_onPermissionWizardResult);
-    _onLowerPower = _trackingApi.lowerPowerMode.listen(_onLowPowerResult);
+    _onLowerPower = _trackingApi.lowPowerMode.listen(_onLowPowerResult);
     _onLocationChanged = _trackingApi.locationChanged.listen(_onLocationChangedResult);
     initPlatformState();
   }
@@ -99,7 +98,6 @@ class _TitleScreenState extends State<TitleScreen> {
             maxLengthEnforcement: MaxLengthEnforcement.none,
             onFieldSubmitted: (token) {
               try {
-                final uuid = Uuid.parse(token, validate: true);
                 _onDeviceTokenUpdated(token: token);
               } on FormatException catch(e) {
                 _tokenEditingController.text = _deviceId;
@@ -126,12 +124,8 @@ class _TitleScreenState extends State<TitleScreen> {
             ],
           ),
           ElevatedButton(
-            onPressed: _isSdkEnabled ? _onForceDisableSDK : null,
-            child: const Text('Force Disable SDK with upload'),
-          ),
-          ElevatedButton(
             onPressed: !_isSdkEnabled && _deviceId.isNotEmpty ? _onLogout : null,
-            child: const Text('Clear Device Token'),
+            child: const Text('Logout'),
           ),
           _sizedBoxSpace,
           ElevatedButton(
@@ -257,27 +251,10 @@ class _TitleScreenState extends State<TitleScreen> {
     setState(() {});
   }
 
-  Future<void> _onForceDisableSDK() async {
-    if (_isManualTracking) {
-      await _trackingApi.stopManualTracking();
-      _isManualTracking = false;
-    }
-
-    if (Platform.isIOS) {
-      await _trackingApi.setDisableTracking(value: true);
-      final disableTracking = await _trackingApi.isDisableTracking() ?? false;
-      _isTracking = !disableTracking;
-    }
-
-    await _trackingApi.setDisableWithUpload();
-    _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
-    setState(() {});
-  }
-
   Future<void> _onLogout() async {
     _tokenEditingController.text = '';
     _deviceId = '';
-    await _trackingApi.clearDeviceID();
+    await _trackingApi.logout();
     setState(() {});
   }
 

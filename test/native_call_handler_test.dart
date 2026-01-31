@@ -91,7 +91,7 @@ void main() {
       });
 
       test('emits true when handles corresponding value', () async {
-        handler.lowerPowerMode.listen(
+        handler.lowPowerMode.listen(
           expectAsync1<void, bool>(events.add),
         );
 
@@ -105,7 +105,7 @@ void main() {
       test('emits all values', () async {
         const testValues = <bool>[true, false];
 
-        handler.lowerPowerMode.listen(
+        handler.lowPowerMode.listen(
           expectAsync1<void, bool>(
             events.add,
             count: testValues.length,
@@ -256,10 +256,9 @@ void main() {
       late Map<String, Object> result;
 
       setUp(() {
-        handler.onAllTagsRemove = (status, deactivatedTagsCount, time) {
+        handler.onAllTagsRemove = (status, time) {
           result = {
             'status': status,
-            'deactivatedTagsCount': deactivatedTagsCount,
             'time': time,
           };
         };

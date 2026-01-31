@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0
+
+* Sync all public APIs between native SDK and flutter plugin
+
 ## 0.4.1
 
 * Added Support SceneDelegate support for iOS module of telematics_sdk plugin. To add UISceneDelegate adoption follow guide: https://docs.flutter.dev/release/breaking-changes/uiscenedelegate
