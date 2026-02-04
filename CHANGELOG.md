@@ -2,6 +2,10 @@
 
 ## 1.0.0
 
+* Update README
+
+## 1.0.0
+
 * Sync all public APIs between native SDK and flutter plugin
 
 ## 0.4.1
