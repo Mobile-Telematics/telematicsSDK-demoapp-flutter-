@@ -97,8 +97,8 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "removeAllFutureTrackTags" -> removeAllFutureTrackTags(result)
             "setAccidentDetectionSensitivity" -> setAccidentDetectionSensitivity(call, result)
             "isRTLDEnabled" -> isRtdEnabled(result)
-            "enableAccidents" -> enableAccidents(call, result)
-            "isEnabledAccidents" -> isAccidentDetectionEnabled(result)
+            "setAccidentDetectionEnabled" -> setAccidentDetectionEnablede(call, result)
+            "isAccidentDetectionEnabled" -> isAccidentDetectionEnabled(result)
             "setAndroidAutoStartEnabled" -> setAutoStartEnabled(call, result)
             "isAndroidAutoStartEnabled" -> isAutoStartEnabled(result)
             else -> result.notImplemented()
@@ -273,7 +273,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         result.success(isRtdEnabled)
     }
 
-    private fun enableAccidents(call: MethodCall, result: Result) {
+    private fun setAccidentDetectionEnabled(call: MethodCall, result: Result) {
         val enable = call.argument<Boolean?>("enableAccidents") as Boolean
         api.setAccidentDetectionEnabled(enable)
         result.success(null)

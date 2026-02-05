@@ -313,11 +313,10 @@ final isTracking = await trackingApi.isTracking();
 
 **Enable Accidents detection**
 Accidents detection is disabled by default. You can enable detection.
-In order for accidents detection to work, you need to [enable high-frequency data collection](https://docs.damoov.com/docs/methods-for-ios-app#enable-high-frequency-data-collection-hf)
 ```dart
-await trackingApi.enableAccidents(value: true);
+await trackingApi.setAccidentDetectionEnabled(value: true);
 //to check current accidents status
-final isEnabledAccidents = await trackingApi.isEnabledAccidents();
+final isEnabledAccidents = await trackingApi.isAccidentDetectionEnabled();
 ```
 
 **Change Accident detection sensitivity**

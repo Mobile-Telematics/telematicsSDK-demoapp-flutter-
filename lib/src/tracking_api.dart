@@ -234,11 +234,11 @@ class TrackingApi {
   /// Enables or disables accident detection in the native SDK.
   ///
   /// - Parameter value: `true` to enable, `false` to disable.
-  Future<void> enableAccidents({required bool value}) =>
-      _channel.invokeMethod('enableAccidents', {'enableAccidents': value});
+  Future<void> setAccidentDetectionEnabled({required bool value}) =>
+      _channel.invokeMethod('setAccidentDetectionEnabled', {'enableAccidents': value});
 
   /// Returns whether accident detection is enabled in the native SDK.
-  Future<bool?> isEnabledAccidents() => _channel.invokeMethod('isEnabledAccidents');
+  Future<bool?> isAccidentDetectionEnabled() => _channel.invokeMethod('isAccidentDetectionEnabled');
 
   /// Enables speed limit monitoring and configures speed violation parameters.
   ///
@@ -302,9 +302,9 @@ class TrackingApi {
   /// iOS only: returns whether aggressive heartbeat mode is enabled.
   ///
   /// Throws [UnsupportedError] if called on a non-iOS platform.
-  Future<bool?> isAggressiveHeartbeat() {
+  Future<bool?> isAggressiveHeartbeats() {
     _ensureIOS();
-    return _channel.invokeMethod('isAggressiveHeartbeat');
+    return _channel.invokeMethod('isAggressiveHeartbeats');
   }
 
   /// iOS only: enables or disables aggressive heartbeat mode.

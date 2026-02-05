@@ -2,6 +2,10 @@
 
 ## 1.0.1
 
+* Rename public APIs
+
+## 1.0.1
+
 * Update README
 
 ## 1.0.0

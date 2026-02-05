@@ -58,7 +58,7 @@ class _TitleScreenState extends State<TitleScreen> {
     if (Platform.isIOS) {
       final disableTracking = await _trackingApi.isDisableTracking() ?? false;
       _isTracking = !disableTracking;
-      _isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeat() ?? false;
+      _isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeats() ?? false;
     }
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -260,7 +260,7 @@ class _TitleScreenState extends State<TitleScreen> {
 
   Future<void> _onAggressiveHeartbeats(bool value) async {
     await _trackingApi.setAggressiveHeartbeats(value: value);
-    _isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeat() ?? false;
+    _isAggressiveHeartbeats = await _trackingApi.isAggressiveHeartbeats() ?? false;
     setState(() {});
   }
 

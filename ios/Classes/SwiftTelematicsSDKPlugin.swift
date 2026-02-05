@@ -77,18 +77,18 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
             setAccidentDetectionSensitivity(call, result)
         case "isRTLDEnabled":
             isRTLDEnabled(result)
-        case "enableAccidents":
-            enableAccidents(call, result)
-        case "isEnabledAccidents":
-            isEnabledAccidents(result)
+        case "setAccidentDetectionEnabled":
+            setAccidentDetectionEnabled(call, result)
+        case "isAccidentDetectionEnabled":
+            isAccidentDetectionEnabled(result)
         case "getApiLanguage":
             getApiLanguage(result)
         case "setApiLanguage":
             setApiLanguage(call, result)
         case "setAggressiveHeartbeats":
             setAggressiveHeartbeats(call, result)
-        case "isAggressiveHeartbeat":
-            isAggressiveHeartbeat(result)
+        case "isAggressiveHeartbeats":
+            isAggressiveHeartbeats(result)
         case "isDisableTracking":
             isDisableTracking(result: result)
          case "setDisableTracking":
@@ -430,11 +430,11 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
         result(nil)
     }
     
-    private func isAggressiveHeartbeat(_ result: @escaping FlutterResult) {
+    private func isAggressiveHeartbeats(_ result: @escaping FlutterResult) {
         result(RPEntry.instance.aggressiveHeartbeat())
     }
     
-    private func enableAccidents(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+    private func setAccidentDetectionEnabled(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         guard let value = args["enableAccidents"] as? Bool else {
             result(nil)
@@ -455,7 +455,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
         result(nil)
     }
     
-    private func isEnabledAccidents(_ result: @escaping FlutterResult) {
+    private func isAccidentDetectionEnabled(_ result: @escaping FlutterResult) {
         result(RPEntry.instance.isEnabledAccidents())
     }
     
