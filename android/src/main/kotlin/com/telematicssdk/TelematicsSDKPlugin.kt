@@ -97,7 +97,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "removeAllFutureTrackTags" -> removeAllFutureTrackTags(result)
             "setAccidentDetectionSensitivity" -> setAccidentDetectionSensitivity(call, result)
             "isRTLDEnabled" -> isRtdEnabled(result)
-            "setAccidentDetectionEnabled" -> setAccidentDetectionEnablede(call, result)
+            "setAccidentDetectionEnabled" -> setAccidentDetectionEnabled(call, result)
             "isAccidentDetectionEnabled" -> isAccidentDetectionEnabled(result)
             "setAndroidAutoStartEnabled" -> setAutoStartEnabled(call, result)
             "isAndroidAutoStartEnabled" -> isAutoStartEnabled(result)

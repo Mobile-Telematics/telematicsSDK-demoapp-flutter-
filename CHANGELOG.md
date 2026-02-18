@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+* Fix setAccidentDetectionEnabled api
+
 ## 1.0.2
 
 * Rename public APIs
