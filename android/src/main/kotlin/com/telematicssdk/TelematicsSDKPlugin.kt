@@ -1,12 +1,12 @@
 package com.telematicssdk
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.NonNull
-import org.json.JSONObject
 import com.telematicssdk.tracking.TrackingApi
-import com.telematicssdk.tracking.server.model.sdk.TrackTag
 import com.telematicssdk.tracking.utils.permissions.PermissionsWizardActivity
 import com.telematicssdk.tracking.model.realtime.configuration.AccidentDetectionSensitivity
 
@@ -71,7 +71,9 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        TODO("Not yet implemented")
+        activityPluginBinding = binding
+        activityPluginBinding.addActivityResultListener(this)
+        activity = binding.activity
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -101,6 +103,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "isAccidentDetectionEnabled" -> isAccidentDetectionEnabled(result)
             "setAndroidAutoStartEnabled" -> setAutoStartEnabled(call, result)
             "isAndroidAutoStartEnabled" -> isAutoStartEnabled(result)
+            "registerSpeedViolations" -> registerSpeedViolations(call, result)
             else -> result.notImplemented()
         }
     }
@@ -170,8 +173,26 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
     private fun setEnableSdk(call: MethodCall, result: Result) {
         val enable = call.argument<Boolean?>("enable") as Boolean
-        api.setEnableSdk(enable)
-        result.success(null)
+
+        if (!hasFineLocationPermission()) {
+            result.error(
+                "MISSING_PERMISSION",
+                "ACCESS_FINE_LOCATION is not granted",
+                null
+            )
+            return
+        }
+
+        try {
+            api.setEnableSdk(enable)
+            result.success(null)
+        } catch (e: SecurityException) {
+            result.error(
+                "SECURITY_EXCEPTION",
+                e.message,
+                null
+            )
+        }
     }
 
     private fun startManualTracking(result: Result) {
@@ -255,7 +276,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
     }
 
     private fun setAccidentDetectionSensitivity(call: MethodCall, result: Result) {
-        val value = call.argument<String?>("accidentDetectionSensitivity") as Int
+        val value = call.argument<Int?>("accidentDetectionSensitivity") ?: 0
 
         val sensitivity = when (value) {
             0 -> AccidentDetectionSensitivity.Normal
@@ -303,5 +324,12 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         api.registerSpeedViolations(speedLimitKmH.toFloat(), speedLimitTimeoutMs,
             SpeedViolationsListenerImpl(channel))
         result.success(null)
+    }
+
+    //Helper
+    private fun hasFineLocationPermission(): Boolean {
+        return context.checkSelfPermission(
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
     }
 }

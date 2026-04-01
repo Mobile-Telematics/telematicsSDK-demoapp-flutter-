@@ -3,7 +3,7 @@ version '2.0-SNAPSHOT'
 
 buildscript {
     ext.kotlin_version = '2.1.10'
-    ext.raxel_tracking = '3.2.0'
+    ext.telematicssdk_tracking = '3.3.0'
     repositories {
         google()
         jcenter()
@@ -63,5 +63,5 @@ dependencies {
     //noinspection GradleDependency
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "com.telematicssdk:tracking:$raxel_tracking"
+    implementation "com.telematicssdk:tracking:$telematicssdk_tracking"
 }

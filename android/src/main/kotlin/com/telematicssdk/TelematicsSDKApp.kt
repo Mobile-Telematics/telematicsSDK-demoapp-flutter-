@@ -1,12 +1,12 @@
 package com.telematicssdk
 
+import android.app.Application
 import android.util.Log
 import androidx.annotation.CallSuper
 import com.telematicssdk.tracking.Settings
 import com.telematicssdk.tracking.TrackingApi
-import io.flutter.app.FlutterApplication
 
-open class TelematicsSDKApp : FlutterApplication() {
+open class TelematicsSDKApp : Application() {
 
     @CallSuper
     override fun onCreate() {
