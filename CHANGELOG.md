@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.4
+
+### Android updates
+* Motion detection algorithms update 
+* Implemented continuation of track recording after SDK reboot 
+* Added database protection against corruption 
+* Enhance SDK Logging 
+* All Bluetooth-related permissions will be removed from the SDK:
+  android.permission.BLUETOOTH_CONNECT
+  android.permission.BLUETOOTH_SCAN
+  android.permission.BLUETOOTH
+  android.permission.BLUETOOTH_ADMIN
+  android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE 
+* All health-related permissions will be removed from the SDK:
+  android.permission.FOREGROUND_SERVICE_HEALTH
+  So you don't need to remove anything else from your app-level manifest.
+  And all our Foreground services will run with only one type: location 
+* Other changes related to improving reliability and stability
+
 ## 1.0.3
 
 * Fix setAccidentDetectionEnabled api
