@@ -13,3 +13,6 @@ build/
 
 Podfile.lock
 pubspec.lock
+
+.build/
+.swiftpm/

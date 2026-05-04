@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+* Updated iOS sdk version to 7.1.0
+* Updated Android sdk version to 4.0.0
+* Migrated iOS plugin to support SPM instead of CocoaPods
+
 ## 1.0.4
 
 ### Android updates

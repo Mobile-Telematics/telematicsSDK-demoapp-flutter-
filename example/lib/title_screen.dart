@@ -96,7 +96,6 @@ class _TitleScreenState extends State<TitleScreen> {
           Text(_getCurrentLocation()),
           Text(
             _sdkDeviceId.isEmpty ? 'Device ID: —' : 'Device ID: $_sdkDeviceId',
-            style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 8),
           TextFormField(

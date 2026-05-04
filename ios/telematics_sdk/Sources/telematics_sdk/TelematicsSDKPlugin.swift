@@ -9,7 +9,7 @@ struct Constants {
     }
 }
 
-public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
+public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     private let channel: FlutterMethodChannel
     private var speedLimitTimeThreshold: TimeInterval = -1
@@ -27,7 +27,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "telematics_sdk", binaryMessenger: registrar.messenger())
-        let instance = SwiftTelematicsSDKPlugin(methodChannel: channel)
+        let instance = TelematicsSDKPlugin(methodChannel: channel)
         registrar.addMethodCallDelegate(instance, channel: channel)
         registrar.addApplicationDelegate(instance)
         registrar.addSceneDelegate(instance)
@@ -487,7 +487,7 @@ public class SwiftTelematicsSDKPlugin: NSObject, FlutterPlugin {
 
 // MARK: - App Delegate
 
-extension SwiftTelematicsSDKPlugin {
+extension TelematicsSDKPlugin {
     
     //MARK: - Lifecycle handlers
     
@@ -545,7 +545,7 @@ extension SwiftTelematicsSDKPlugin {
 }
 
 // MARK: - Scene Delegate
-extension SwiftTelematicsSDKPlugin: FlutterSceneLifeCycleDelegate {
+extension TelematicsSDKPlugin: FlutterSceneLifeCycleDelegate {
     
     public func sceneDidDisconnect(_ scene: UIScene) { }
     
@@ -566,7 +566,7 @@ extension SwiftTelematicsSDKPlugin: FlutterSceneLifeCycleDelegate {
 }
 
 // MARK: - RPLowPowerModeDelegate
-extension SwiftTelematicsSDKPlugin: RPLowPowerModeDelegate {
+extension TelematicsSDKPlugin: RPLowPowerModeDelegate {
     
     public func lowPowerMode(_ state: Bool) {
         self.channel.invokeMethod("onLowPowerMode", arguments: state)
@@ -575,7 +575,7 @@ extension SwiftTelematicsSDKPlugin: RPLowPowerModeDelegate {
 }
 
 // MARK: - RPTrackingStateListenerDelegate
-extension SwiftTelematicsSDKPlugin: RPTrackingStateListenerDelegate {
+extension TelematicsSDKPlugin: RPTrackingStateListenerDelegate {
     
     public func trackingStateChanged(_ state: Bool) {
         self.channel.invokeMethod("onTrackingStateChanged", arguments: state)
@@ -584,7 +584,7 @@ extension SwiftTelematicsSDKPlugin: RPTrackingStateListenerDelegate {
 }
 
 // MARK: - RPAccuracyAuthorizationDelegate
-extension SwiftTelematicsSDKPlugin: RPAccuracyAuthorizationDelegate {
+extension TelematicsSDKPlugin: RPAccuracyAuthorizationDelegate {
     
     public func wrongAccuracyAuthorization() {
         self.channel.invokeMethod("onWrongAccuracyAuthorization", arguments: nil)
@@ -593,7 +593,7 @@ extension SwiftTelematicsSDKPlugin: RPAccuracyAuthorizationDelegate {
 }
 
 // MARK: - RPRTDLDelegate
-extension SwiftTelematicsSDKPlugin: RPRTDLDelegate {
+extension TelematicsSDKPlugin: RPRTDLDelegate {
     
     public func rtldColectedData() {
         self.channel.invokeMethod("onRTLDCollectedData", arguments: nil)
@@ -601,7 +601,7 @@ extension SwiftTelematicsSDKPlugin: RPRTDLDelegate {
     
 }
 
-extension SwiftTelematicsSDKPlugin: RPLocationDelegate {
+extension TelematicsSDKPlugin: RPLocationDelegate {
     
     public func onLocationChanged(_ location: CLLocation) {
         let latitude = location.coordinate.latitude as Double
@@ -617,7 +617,7 @@ extension SwiftTelematicsSDKPlugin: RPLocationDelegate {
     
 }
 
-extension SwiftTelematicsSDKPlugin: RPSpeedLimitDelegate {
+extension TelematicsSDKPlugin: RPSpeedLimitDelegate {
     
     public var timeThreshold: TimeInterval { speedLimitTimeThreshold }
     public var speedLimit: Double { speedLimitKmH }
