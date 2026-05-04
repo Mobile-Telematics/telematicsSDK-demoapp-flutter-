@@ -12,11 +12,13 @@ struct Constants {
 public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     private let channel: FlutterMethodChannel
+    private let sceneDelegate: FlutterSceneLifeCycleDelegate
     private var speedLimitTimeThreshold: TimeInterval = -1
     private var speedLimitKmH: Double = -1
     
-    public init(methodChannel: FlutterMethodChannel) {
+    public init(methodChannel: FlutterMethodChannel, sceneDelegate: FlutterSceneLifeCycleDelegate) {
         self.channel = methodChannel
+        self.sceneDelegate = sceneDelegate
         super.init()
         RPEntry.instance.lowPowerModeDelegate = self
         RPEntry.instance.locationDelegate = self
@@ -27,10 +29,14 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "telematics_sdk", binaryMessenger: registrar.messenger())
-        let instance = TelematicsSDKPlugin(methodChannel: channel)
+        let sceneDelegate = TelematicsSceneLifeCycleDelegate()
+        let instance = TelematicsSDKPlugin(
+            methodChannel: channel,
+            sceneDelegate: sceneDelegate
+        )
         registrar.addMethodCallDelegate(instance, channel: channel)
         registrar.addApplicationDelegate(instance)
-        registrar.addSceneDelegate(instance)
+        registrar.addSceneDelegate(sceneDelegate)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -483,13 +489,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
         result(nil)
     }
     
-}
-
-// MARK: - App Delegate
-
-extension TelematicsSDKPlugin {
-    
-    //MARK: - Lifecycle handlers
+    //MARK: - App Delegate
     
     public func application(
         _ application: UIApplication,
@@ -541,28 +541,6 @@ extension TelematicsSDKPlugin {
     public func applicationDidBecomeActive(_ application: UIApplication) {
         RPEntry.instance.applicationDidBecomeActive(application)
     }
-    
-}
-
-// MARK: - Scene Delegate
-extension TelematicsSDKPlugin: FlutterSceneLifeCycleDelegate {
-    
-    public func sceneDidDisconnect(_ scene: UIScene) { }
-    
-    public func sceneWillEnterForeground(_ scene: UIScene) {
-        RPEntry.instance.sceneWillEnterForeground(scene)
-    }
-    
-    public func sceneDidBecomeActive(_ scene: UIScene) {
-        RPEntry.instance.sceneDidBecomeActive(scene)
-    }
-    
-    public func sceneWillResignActive(_ scene: UIScene) { }
-    
-    public func sceneDidEnterBackground(_ scene: UIScene) {
-        RPEntry.instance.sceneDidEnterBackground(scene)
-    }
-    
 }
 
 // MARK: - RPLowPowerModeDelegate
