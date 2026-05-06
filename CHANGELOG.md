@@ -2,9 +2,14 @@
 
 ## 1.1.0
 
-* Updated iOS sdk version to 7.1.0
-* Updated Android sdk version to 4.0.0
-* Migrated iOS plugin to support SPM instead of CocoaPods
+* Added Telematics iOS SDK v7.1.0 support.
+* Added Telematics Android SDK v4.0.0 support.
+* Migrated native Telematics iOS SDK from CocoaPods to Swift Package Manager.
+* Added Swift Package Manager support for the plugin:
+
+### How to migrate your app to support iOS SPM:
+Swift Package Manager for app developers (https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-app-developers)
+Swift Package Manager for plugin authors (https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-plugin-authors)
 
 ## 1.0.4
 
