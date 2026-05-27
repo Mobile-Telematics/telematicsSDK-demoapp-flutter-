@@ -16,13 +16,10 @@ class App : TelematicsSDKApp() {
     }
 
     override fun setTelematicsSettings(): Settings {
-        val settings = Settings(
-                stopTrackingTimeout = Settings.stopTrackingTimeHigh,
-                accuracy = Settings.accuracyHigh,
-                autoStartOn = true,
-                elmOn = false,
-                hfOn = true
-        )
+        val settings = Settings()
+                .stopTrackingTimeout(Settings.stopTrackingTimeHigh)
+                .accuracy(Settings.accuracyHigh)
+                .autoStartOn(true)
         Log.d("App.setTelematicsSettings", "setTelematicsSettings")
         return settings
     }

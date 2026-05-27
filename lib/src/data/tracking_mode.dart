@@ -1,0 +1,1 @@
+enum TrackingMode { standard, persistent }

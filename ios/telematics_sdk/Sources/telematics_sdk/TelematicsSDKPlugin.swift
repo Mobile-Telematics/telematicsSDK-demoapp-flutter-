@@ -41,6 +41,10 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycle
             setDeviceID(call, result: result)
         case "getDeviceId":
             getDeviceId(result)
+        case "getDeviceIdRegistrationState":
+            getDeviceIdRegistrationState(result)
+        case "getTrackingState":
+            getTrackingState(result)
         case "logout":
             logout(result)
         case "isAllRequiredPermissionsAndSensorsGranted":
@@ -57,6 +61,14 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycle
             startTrackAsPersistent(result)
         case "stopManualTracking":
             stopManualTracking(result)
+        case "setMaxPersistentTrackingInterval":
+            setMaxPersistentTrackingInterval(call, result)
+        case "getMaxPersistentTrackingInterval":
+            getMaxPersistentTrackingInterval(result)
+        case "setTrackingMode":
+            setTrackingMode(call, result)
+        case "getTrackingMode":
+            getTrackingMode(result)
         case "uploadUnsentTrips":
             uploadUnsentTrips(result)
         case "getUnsentTripCount":
@@ -123,6 +135,69 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycle
         result(RPEntry.instance.getDeviceId())
     }
     
+    private func getDeviceIdRegistrationState(_ result: @escaping FlutterResult) {
+        let state = RPEntry.instance.getDeviceIdRegistrationState()
+        let checkedAtMillis: Int
+        if state.checkedAt > 0 {
+            checkedAtMillis = Int((state.checkedAt * 1000).rounded())
+        } else {
+            checkedAtMillis = 0
+        }
+        result([
+            "status": getDeviceIdRegistrationStatusString(from: state.status),
+            "checkedAtMillis": checkedAtMillis
+        ])
+    }
+
+    private func getTrackingState(_ result: @escaping FlutterResult) {
+        RPEntry.instance.getTrackingState { [weak self] state in
+            result([
+                "automaticTrackingStatus": self?.getTrackingStatusString(
+                    from: state.automaticTrackingStatus
+                ) ?? "ENABLED",
+                "manualTrackingStatus": self?.getTrackingStatusString(
+                    from: state.manualTrackingStatus
+                ) ?? "ENABLED"
+            ])
+        }
+    }
+
+    private func getDeviceIdRegistrationStatusString(
+        from status: RPDeviceIdRegistrationStatus
+    ) -> String {
+        switch status {
+        case .notSet:
+            return "NOT_SET"
+        case .unknown:
+            return "UNKNOWN"
+        case .registered:
+            return "REGISTERED"
+        case .notRegistered:
+            return "NOT_REGISTERED"
+        @unknown default:
+            return "UNKNOWN"
+        }
+    }
+
+    private func getTrackingStatusString(from status: RPTrackingStatus) -> String {
+        switch status {
+        case .enabled:
+            return "ENABLED"
+        case .deviceIdNotSet:
+            return "DEVICE_ID_NOT_SET"
+        case .sdkDisabled:
+            return "SDK_DISABLED"
+        case .disabledBySettings:
+            return "DISABLED_BY_SETTINGS"
+        case .disabledByServer:
+            return "DISABLED_BY_SERVER"
+        case .disabledBySchedule:
+            return "DISABLED_BY_SCHEDULE"
+        @unknown default:
+            return "ENABLED"
+        }
+    }
+
     private func isAllRequiredPermissionsGranted(_ result: @escaping FlutterResult) {
         result(RPEntry.instance.isAllRequiredPermissionsAndSensorsGranted())
     }
@@ -189,7 +264,61 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycle
         RPEntry.instance.stopTracking()
         result(true)
     }
-    
+
+    private func setMaxPersistentTrackingInterval(
+        _ call: FlutterMethodCall,
+        _ result: @escaping FlutterResult
+    ) {
+        guard
+            let args = call.arguments as? [String: Any],
+            let minutes = args["minutes"] as? Int
+        else {
+            result(FlutterError(code: FlutterPluginCode.failure,
+                                message: "minutes is required",
+                                details: nil)
+            )
+            return
+        }
+
+        do {
+            try RPEntry.instance.setMaxPersistentTrackingInterval(minutes: minutes)
+            result(nil)
+        } catch {
+            result(FlutterError(code: FlutterPluginCode.failure,
+                                message: error.localizedDescription,
+                                details: nil)
+            )
+        }
+    }
+
+    private func getMaxPersistentTrackingInterval(_ result: @escaping FlutterResult) {
+        result(RPEntry.instance.getMaxPersistentTrackingInterval())
+    }
+
+    private func setTrackingMode(
+        _ call: FlutterMethodCall,
+        _ result: @escaping FlutterResult
+    ) {
+        guard
+            let args = call.arguments as? [String: Any],
+            let trackingModeValue = args["trackingMode"] as? Int,
+            let trackingMode = RPTrackingMode(rawValue: trackingModeValue)
+        else {
+            result(FlutterError(code: FlutterPluginCode.failure,
+                                message: "trackingMode is invalid",
+                                details: nil)
+            )
+            return
+        }
+
+        RPEntry.instance.setTrackingMode(trackingMode)
+        result(nil)
+    }
+
+    private func getTrackingMode(_ result: @escaping FlutterResult) {
+        result(RPEntry.instance.getTrackingMode().rawValue)
+    }
+
     private func uploadUnsentTrips(_ result: @escaping FlutterResult) {
         RPEntry.instance.uploadUnsentTrips()
         result(nil)

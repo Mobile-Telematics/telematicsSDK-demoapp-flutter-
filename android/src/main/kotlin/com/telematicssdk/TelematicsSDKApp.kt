@@ -25,17 +25,12 @@ open class TelematicsSDKApp : Application() {
      * Stop tracking time is 5 minute.
      * Parking radius is 100 meters.
      * Auto start tracking is true.
-     * hfOn - true if HIGH FREQUENCY data recording from sensors (acc, gyro) is ON and false otherwise.
-     * isElmOn - true if data recording from ELM327 devices is ON and false otherwise.
      */
     open fun setTelematicsSettings(): Settings {
-        val settings = Settings(
-            stopTrackingTimeout = Settings.stopTrackingTimeHigh,
-            accuracy = Settings.accuracyHigh,
-            autoStartOn = true,
-            elmOn = false,
-            hfOn = true,
-        )
+        val settings = Settings()
+            .stopTrackingTimeout(Settings.stopTrackingTimeHigh)
+            .accuracy(Settings.accuracyHigh)
+            .autoStartOn(true)
         Log.d("TelematicsSDKApp", "setTelematicsSettings")
         return settings
     }

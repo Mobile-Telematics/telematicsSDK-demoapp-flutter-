@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.NonNull
 import com.telematicssdk.tracking.TrackingApi
+import com.telematicssdk.tracking.model.track.TrackingMode
 import com.telematicssdk.tracking.utils.permissions.PermissionsWizardActivity
 import com.telematicssdk.tracking.model.realtime.configuration.AccidentDetectionSensitivity
 
@@ -80,6 +81,8 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         when (call.method) {
             "isInitialized" -> isInitialized(result)
             "getDeviceId" -> getDeviceId(result)
+            "getDeviceIdRegistrationState" -> getDeviceIdRegistrationState(result)
+            "getTrackingState" -> getTrackingState(result)
             "setDeviceID" -> setDeviceID(call, result)
             "logout" -> logout(result)
             "isAllRequiredPermissionsAndSensorsGranted" -> isAllRequiredPermissionsAndSensorsGranted(result)
@@ -89,6 +92,10 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "startManualTracking" -> startManualTracking(result)
             "startTrackAsPersistent" -> startTrackAsPersistent(result)
             "stopManualTracking" -> stopManualTracking(result)
+            "setMaxPersistentTrackingInterval" -> setMaxPersistentTrackingInterval(call, result)
+            "getMaxPersistentTrackingInterval" -> getMaxPersistentTrackingInterval(result)
+            "setTrackingMode" -> setTrackingMode(call, result)
+            "getTrackingMode" -> getTrackingMode(result)
             "uploadUnsentTrips" -> uploadUnsentTrips(result)
             "getUnsentTripCount" -> getUnsentTripCount(result)
             "sendCustomHeartbeats" -> sendCustomHeartbeats(call, result)
@@ -143,6 +150,29 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         val deviceId = api.getDeviceId()
 
         result.success(deviceId)
+    }
+
+    private fun getDeviceIdRegistrationState(result: Result) {
+        val state = api.getDeviceIdRegistrationState()
+        val checkedAtMillis = state.checkedAtMillis ?: 0L
+
+        result.success(
+            mapOf(
+                "status" to state.status.name,
+                "checkedAtMillis" to checkedAtMillis,
+            )
+        )
+    }
+
+    private fun getTrackingState(result: Result) {
+        val state = api.getTrackingState()
+
+        result.success(
+            mapOf(
+                "automaticTrackingStatus" to state.automaticTrackingStatus.name,
+                "manualTrackingStatus" to state.manualTrackingStatus.name,
+            )
+        )
     }
 
     private fun isSdkEnabled(result: Result) {
@@ -211,6 +241,55 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         val stopResult = api.stopTracking()
 
         result.success(stopResult)
+    }
+
+    private fun setMaxPersistentTrackingInterval(call: MethodCall, result: Result) {
+        val minutes = call.argument<Int?>("minutes") as Int
+
+        try {
+            api.setMaxPersistentTrackingInterval(minutes)
+            result.success(null)
+        } catch (e: IllegalArgumentException) {
+            result.error(
+                "INVALID_ARGUMENT",
+                e.message,
+                null
+            )
+        }
+    }
+
+    private fun getMaxPersistentTrackingInterval(result: Result) {
+        result.success(api.getMaxPersistentTrackingInterval())
+    }
+
+    private fun setTrackingMode(call: MethodCall, result: Result) {
+        val trackingModeValue = call.argument<Int?>("trackingMode") as Int
+        val trackingMode = when (trackingModeValue) {
+            0 -> TrackingMode.Standard
+            1 -> TrackingMode.Persistent
+            else -> null
+        }
+
+        if (trackingMode == null) {
+            result.error(
+                "INVALID_ARGUMENT",
+                "trackingMode is invalid",
+                null
+            )
+            return
+        }
+
+        api.setTrackingMode(trackingMode)
+        result.success(null)
+    }
+
+    private fun getTrackingMode(result: Result) {
+        val trackingMode = when (api.getTrackingMode()) {
+            TrackingMode.Standard -> 0
+            TrackingMode.Persistent -> 1
+        }
+
+        result.success(trackingMode)
     }
 
     private fun uploadUnsentTrips(result: Result) {

@@ -2,8 +2,8 @@ group 'com.telematicssdk'
 version '2.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '2.1.10'
-    ext.telematicssdk_tracking = '3.3.0'
+    ext.kotlin_version = '2.2.20'
+    ext.telematicssdk_tracking = '4.0.0'
     repositories {
         google()
         jcenter()
@@ -27,7 +27,6 @@ rootProject.allprojects {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 36
@@ -49,13 +48,15 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     packagingOptions {
         exclude 'META-INF/INDEX.LIST'
         exclude 'META-INF/io.netty.versions.properties'
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 

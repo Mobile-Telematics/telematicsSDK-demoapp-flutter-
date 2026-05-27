@@ -83,14 +83,11 @@ class App: TelematicsSDKApp() {
         super.onCreate()
     }
         
-    override fun setTelematicsSettings(): Settings { 
-        val settings = Settings(
-            stopTrackingTimeout = Settings.stopTrackingTimeHigh, 
-            accuracy = Settings.accuracyHigh,
-            autoStartOn = true,
-            elmOn = false,
-            hfOn = true
-        )
+    override fun setTelematicsSettings(): Settings {
+        val settings = Settings()
+            .stopTrackingTimeout(Settings.stopTrackingTimeHigh)
+            .accuracy(Settings.accuracyHigh)
+            .autoStartOn(true)
         return settings
     }
 }
@@ -107,7 +104,7 @@ class App: TelematicsSDKApp() {
 3. add Telematics SDK repository into (module)/build.gradle
 ```groovy
 dependencies {
-    implementation "com.telematicssdk:tracking:3.2.0"
+    implementation "com.telematicssdk:tracking:4.0.0"
 }
 ```
 
@@ -219,7 +216,7 @@ await trackingApi.startManualTracking();
 
 **Manual start persistent tracking**
 ```dart
-await trackingApi.startManualPersistentTracking();
+await trackingApi.startTrackAsPersistent();
 ```
 **Notes:**
 Persistent tracking ignores all stop tracking reasons and continues before 'stopManualTracking' method will be called.
@@ -238,6 +235,21 @@ final initialized = await trackingApi.isInitialized();
 **Get current device ID**
 ```dart
 final deviceId = await trackingApi.getDeviceId();
+```
+
+**Get device ID registration state**
+
+Returns the latest known registration status for the current device ID and the
+timestamp of the last check in milliseconds. A `checkedAtMillis` value of `0`
+means the registration state has not been checked yet.
+```dart
+final state = await trackingApi.getDeviceIdRegistrationState();
+
+if (state.status == DeviceIdRegistrationStatus.registered) {
+  // Current device ID is registered.
+}
+
+final checkedAtMillis = state.checkedAtMillis;
 ```
 
 **Check all required permissions and sensors**
@@ -309,6 +321,51 @@ await trackingApi.sendCustomHeartbeats(reason: 'CustomHeartbeat');
 **Tracking status**
 ```dart
 final isTracking = await trackingApi.isTracking();
+```
+
+**Tracking availability state**
+
+Returns automatic and manual tracking availability statuses. Use this method to
+inspect whether tracking is enabled or blocked by device ID, SDK settings,
+local settings, server settings, or schedule.
+```dart
+final state = await trackingApi.getTrackingState();
+
+final automaticStatus = state.automaticTrackingStatus;
+final manualStatus = state.manualTrackingStatus;
+```
+
+**Set persistent tracking interval**
+
+Sets the maximum duration for a single persistent tracking session, in minutes.
+Allowed values are from `5` to `600`. The native SDK default is `240` minutes
+(8 hours).
+```dart
+await trackingApi.setMaxPersistentTrackingInterval(minutes: 240);
+```
+
+**Get persistent tracking interval**
+```dart
+final minutes = await trackingApi.getMaxPersistentTrackingInterval();
+```
+
+**Set tracking mode**
+
+Sets whether automatically started and manually started tracking sessions use
+standard or persistent mode.
+```dart
+await trackingApi.setTrackingMode(
+  trackingMode: TrackingMode.persistent,
+);
+```
+
+**Get tracking mode**
+```dart
+final trackingMode = await trackingApi.getTrackingMode();
+
+if (trackingMode == TrackingMode.standard) {
+  // Standard tracking mode is active.
+}
 ```
 
 **Enable Accidents detection**

@@ -2,9 +2,16 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart';
-import 'package:telematics_sdk/src/native_call_handler.dart';
+import 'package:telematics_sdk/src/data/accident_detection_sensitivity.dart';
+import 'package:telematics_sdk/src/data/api_language.dart';
 import 'package:telematics_sdk/src/data/future_track_callbacks.dart';
-import 'package:telematics_sdk/telematics_sdk.dart';
+import 'package:telematics_sdk/src/data/tracking_mode.dart';
+import 'package:telematics_sdk/src/data/models/device_id_registration_state.dart';
+import 'package:telematics_sdk/src/data/models/permission_wizard_result.dart';
+import 'package:telematics_sdk/src/data/models/speed_violation.dart';
+import 'package:telematics_sdk/src/data/models/track_location.dart';
+import 'package:telematics_sdk/src/data/models/tracking_state.dart';
+import 'package:telematics_sdk/src/native_call_handler.dart';
 
 /// High-level Flutter API for interacting with the native Telematics SDK.
 ///
@@ -73,7 +80,6 @@ class TrackingApi {
   /// Emits tracking state changes (`true` = tracking started, `false` = tracking stopped).
   Stream<bool> get trackingStateChanged => _handler.trackingStateChanged;
 
-
   /// iOS only: emits when the SDK detects that precise location is not available
   /// (e.g., the user granted Reduced Accuracy).
   ///
@@ -102,6 +108,25 @@ class TrackingApi {
   ///
   /// The value is platform-defined and may be `null` if not set.
   Future<String?> getDeviceId() => _channel.invokeMethod('getDeviceId');
+
+  /// Returns the latest known device identifier registration state.
+  ///
+  /// [DeviceIdRegistrationState.checkedAtMillis] is a Unix timestamp in
+  /// milliseconds. A value of `0` means the registration state has not been
+  /// checked yet.
+  Future<DeviceIdRegistrationState> getDeviceIdRegistrationState() {
+    return _channel
+        .invokeMapMethod<dynamic, dynamic>('getDeviceIdRegistrationState')
+        .then((value) => DeviceIdRegistrationState.fromJson(value ?? const {}));
+  }
+
+  /// Returns the current automatic and manual tracking availability state.
+  ///
+  Future<TrackingState> getTrackingState() {
+    return _channel
+        .invokeMapMethod<dynamic, dynamic>('getTrackingState')
+        .then((value) => TrackingState.fromJson(value ?? const {}));
+  }
 
   /// Sets the virtual device identifier (token) used by the native SDK.
   ///
@@ -158,11 +183,41 @@ class TrackingApi {
   Future<bool?> stopManualTracking() =>
       _channel.invokeMethod('stopManualTracking');
 
+  /// Sets the maximum duration for a single persistent tracking session.
+  ///
+  /// The value is expressed in minutes. Native SDKs allow values from 5 to 600.
+  Future<void> setMaxPersistentTrackingInterval({required int minutes}) {
+    return _channel.invokeMethod('setMaxPersistentTrackingInterval', {
+      'minutes': minutes,
+    });
+  }
+
+  /// Returns the maximum duration, in minutes, for a single persistent tracking session.
+  Future<int?> getMaxPersistentTrackingInterval() {
+    return _channel.invokeMethod<int>('getMaxPersistentTrackingInterval');
+  }
+
+  /// Sets whether SDK-started and manually-started tracking runs in standard or persistent mode.
+  Future<void> setTrackingMode({required TrackingMode trackingMode}) {
+    return _channel.invokeMethod('setTrackingMode', {
+      'trackingMode': _trackingModeToValue(trackingMode),
+    });
+  }
+
+  /// Returns the current tracking mode.
+  Future<TrackingMode?> getTrackingMode() {
+    return _channel
+        .invokeMethod<int>('getTrackingMode')
+        .then(_trackingModeFromValue);
+  }
+
   /// Triggers upload of locally stored, unsent trips if any.
-  Future<void> uploadUnsentTrips() => _channel.invokeMethod('uploadUnsentTrips');
+  Future<void> uploadUnsentTrips() =>
+      _channel.invokeMethod('uploadUnsentTrips');
 
   /// Returns the number of unsent trips currently stored locally by the native SDK.
-  Future<int?> getUnsentTripCount() => _channel.invokeMethod('getUnsentTripCount');
+  Future<int?> getUnsentTripCount() =>
+      _channel.invokeMethod('getUnsentTripCount');
 
   /// Sends a custom heartbeat to the native SDK with an application-defined reason.
   ///
@@ -179,23 +234,30 @@ class TrackingApi {
   Future<void> showPermissionWizard({
     required bool enableAggressivePermissionsWizard,
     required bool enableAggressivePermissionsWizardPage,
-  }) =>
-      _channel.invokeMethod('showPermissionWizard', {
-        'enableAggressivePermissionsWizard': enableAggressivePermissionsWizard,
-        'enableAggressivePermissionsWizardPage': enableAggressivePermissionsWizardPage,
-      });
+  }) => _channel.invokeMethod('showPermissionWizard', {
+    'enableAggressivePermissionsWizard': enableAggressivePermissionsWizard,
+    'enableAggressivePermissionsWizardPage':
+        enableAggressivePermissionsWizardPage,
+  });
 
   /// Requests the current list of Future Track tags from the native SDK.
   ///
   /// Results are delivered via [onGetTags].
-  Future<void> getFutureTrackTags() => _channel.invokeMethod('getFutureTrackTags');
+  Future<void> getFutureTrackTags() =>
+      _channel.invokeMethod('getFutureTrackTags');
 
   /// Adds a Future Track tag.
   ///
   /// - Parameter tag: Tag identifier.
   /// - Parameter source: Arbitrary source string (e.g. feature/module name).
-  Future<void> addFutureTrackTag({required String tag, required String source}) {
-    return _channel.invokeMethod('addFutureTrackTag', {'tag': tag, 'source': source});
+  Future<void> addFutureTrackTag({
+    required String tag,
+    required String source,
+  }) {
+    return _channel.invokeMethod('addFutureTrackTag', {
+      'tag': tag,
+      'source': source,
+    });
   }
 
   /// Removes a Future Track tag.
@@ -213,7 +275,7 @@ class TrackingApi {
   ///
   /// Higher sensitivity may detect more events but can increase false positives.
   Future<void> setAccidentDetectionSensitivity({
-    required AccidentDetectionSensitivity sensitivity
+    required AccidentDetectionSensitivity sensitivity,
   }) {
     int value = 0;
     switch (sensitivity) {
@@ -224,8 +286,9 @@ class TrackingApi {
       case AccidentDetectionSensitivity.tough:
         value = 2;
     }
-    return _channel
-        .invokeMethod('setAccidentDetectionSensitivity', {'accidentDetectionSensitivity': value});
+    return _channel.invokeMethod('setAccidentDetectionSensitivity', {
+      'accidentDetectionSensitivity': value,
+    });
   }
 
   /// Returns whether RTLD (real-time data logging) is enabled in the native SDK.
@@ -234,11 +297,12 @@ class TrackingApi {
   /// Enables or disables accident detection in the native SDK.
   ///
   /// - Parameter value: `true` to enable, `false` to disable.
-  Future<void> setAccidentDetectionEnabled({required bool value}) =>
-      _channel.invokeMethod('setAccidentDetectionEnabled', {'enableAccidents': value});
+  Future<void> setAccidentDetectionEnabled({required bool value}) => _channel
+      .invokeMethod('setAccidentDetectionEnabled', {'enableAccidents': value});
 
   /// Returns whether accident detection is enabled in the native SDK.
-  Future<bool?> isAccidentDetectionEnabled() => _channel.invokeMethod('isAccidentDetectionEnabled');
+  Future<bool?> isAccidentDetectionEnabled() =>
+      _channel.invokeMethod('isAccidentDetectionEnabled');
 
   /// Enables speed limit monitoring and configures speed violation parameters.
   ///
@@ -296,7 +360,9 @@ class TrackingApi {
       case ApiLanguage.spanish:
         apiLanguage = 'Spanish';
     }
-    return _channel.invokeMethod('setApiLanguage', {'apiLanguage': apiLanguage});
+    return _channel.invokeMethod('setApiLanguage', {
+      'apiLanguage': apiLanguage,
+    });
   }
 
   /// iOS only: returns whether aggressive heartbeat mode is enabled.
@@ -361,9 +427,15 @@ class TrackingApi {
   /// - Parameter permanent: Whether the choice should be persisted permanently.
   ///
   /// Throws [UnsupportedError] if called on a non-Android platform.
-  Future<void> setAndroidAutoStartEnabled({required bool enable, required bool permanent}) {
+  Future<void> setAndroidAutoStartEnabled({
+    required bool enable,
+    required bool permanent,
+  }) {
     _ensureAndroid();
-    return _channel.invokeMethod('setAndroidAutoStartEnabled', {'enable': enable, 'permanent': permanent});
+    return _channel.invokeMethod('setAndroidAutoStartEnabled', {
+      'enable': enable,
+      'permanent': permanent,
+    });
   }
 
   /// Android only: returns whether SDK autostart is enabled.
@@ -383,6 +455,26 @@ class TrackingApi {
   void _ensureAndroid() {
     if (!Platform.isAndroid) {
       throw UnsupportedError('This method is only available on Android.');
+    }
+  }
+
+  int _trackingModeToValue(TrackingMode trackingMode) {
+    switch (trackingMode) {
+      case TrackingMode.standard:
+        return 0;
+      case TrackingMode.persistent:
+        return 1;
+    }
+  }
+
+  TrackingMode? _trackingModeFromValue(int? value) {
+    switch (value) {
+      case 0:
+        return TrackingMode.standard;
+      case 1:
+        return TrackingMode.persistent;
+      default:
+        return null;
     }
   }
 }

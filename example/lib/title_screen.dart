@@ -27,9 +27,11 @@ class _TitleScreenState extends State<TitleScreen> {
   var _isTracking = true;
   var _isManualTracking = false;
   var _isAggressiveHeartbeats = false;
+  TrackingMode? _trackingMode;
   TrackLocation? _location;
 
   final _tokenEditingController = TextEditingController();
+  final _maxPersistentIntervalController = TextEditingController();
 
   @override
   void initState() {
@@ -63,6 +65,14 @@ class _TitleScreenState extends State<TitleScreen> {
           await _trackingApi.isAggressiveHeartbeats() ?? false;
     }
 
+    _trackingMode = await _trackingApi.getTrackingMode();
+    final maxPersistentTrackingInterval = await _trackingApi
+        .getMaxPersistentTrackingInterval();
+    if (maxPersistentTrackingInterval != null) {
+      _maxPersistentIntervalController.text = maxPersistentTrackingInterval
+          .toString();
+    }
+
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
@@ -79,7 +89,12 @@ class _TitleScreenState extends State<TitleScreen> {
       appBar: AppBar(title: const Text('TelematicsSDK_demo')),
       body: ListView(
         shrinkWrap: false,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          0,
+          16,
+          24 + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           Text('SDK status: ${_isSdkEnabled ? 'Enabled' : 'Disabled'}'),
           Text(
@@ -96,6 +111,67 @@ class _TitleScreenState extends State<TitleScreen> {
           Text(_getCurrentLocation()),
           Text(
             _sdkDeviceId.isEmpty ? 'Device ID: —' : 'Device ID: $_sdkDeviceId',
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _onShowDeviceIdRegistrationState,
+                  child: const Text(
+                    'Get Device ID Registration State',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _onShowTrackingState,
+                  child: const Text(
+                    'Get Tracking State',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _maxPersistentIntervalController,
+            decoration: const InputDecoration(
+              labelText: 'Max persistent interval, minutes',
+              hintText: '5-600 minutes',
+            ),
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _onSetMaxPersistentTrackingInterval,
+              child: const Text('Set Max Persistent Interval'),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<TrackingMode>(
+            segments: const [
+              ButtonSegment(
+                value: TrackingMode.standard,
+                label: Text('Standard'),
+              ),
+              ButtonSegment(
+                value: TrackingMode.persistent,
+                label: Text('Persistent'),
+              ),
+            ],
+            selected: _trackingMode == null ? const {} : {_trackingMode!},
+            emptySelectionAllowed: true,
+            onSelectionChanged: (selection) {
+              final trackingMode = selection.firstOrNull;
+              if (trackingMode != null) {
+                _onSetTrackingMode(trackingMode);
+              }
+            },
           ),
           const SizedBox(height: 8),
           TextFormField(
@@ -228,6 +304,8 @@ class _TitleScreenState extends State<TitleScreen> {
     _onPermissionWizardStateChanged.cancel();
     _onLowerPower.cancel();
     _onLocationChanged.cancel();
+    _maxPersistentIntervalController.dispose();
+    _tokenEditingController.dispose();
     super.dispose();
   }
 
@@ -241,6 +319,59 @@ class _TitleScreenState extends State<TitleScreen> {
       _sdkDeviceId = updated ?? '-';
       _tokenEditingController.clear();
     });
+  }
+
+  Future<void> _onShowDeviceIdRegistrationState() async {
+    try {
+      final state = await _trackingApi.getDeviceIdRegistrationState();
+      _showSnackBar(
+        'Device ID Registration State: '
+        'status=${state.status.name}, '
+        'checkedAtMillis=${state.checkedAtMillis}',
+      );
+    } catch (e) {
+      _showSnackBar('getDeviceIdRegistrationState failed: $e');
+    }
+  }
+
+  Future<void> _onShowTrackingState() async {
+    try {
+      final state = await _trackingApi.getTrackingState();
+      _showSnackBar(
+        'Tracking State: '
+        'automatic=${state.automaticTrackingStatus.name}, '
+        'manual=${state.manualTrackingStatus.name}',
+      );
+    } catch (e) {
+      _showSnackBar('getTrackingState failed: $e');
+    }
+  }
+
+  Future<void> _onSetMaxPersistentTrackingInterval() async {
+    final minutes = int.tryParse(_maxPersistentIntervalController.text);
+    if (minutes == null) {
+      _showSnackBar('Max persistent interval is invalid');
+      return;
+    }
+
+    try {
+      await _trackingApi.setMaxPersistentTrackingInterval(minutes: minutes);
+      _showSnackBar('Max Persistent Interval set to $minutes minutes');
+    } catch (e) {
+      _showSnackBar('setMaxPersistentTrackingInterval failed: $e');
+    }
+  }
+
+  Future<void> _onSetTrackingMode(TrackingMode trackingMode) async {
+    try {
+      await _trackingApi.setTrackingMode(trackingMode: trackingMode);
+      setState(() {
+        _trackingMode = trackingMode;
+      });
+      _showSnackBar('Tracking Mode set to ${trackingMode.name}');
+    } catch (e) {
+      _showSnackBar('setTrackingMode failed: $e');
+    }
   }
 
   Future<void> _onEnableSDK() async {
