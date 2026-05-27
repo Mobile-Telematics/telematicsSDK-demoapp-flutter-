@@ -419,7 +419,7 @@ class _TitleScreenState extends State<TitleScreen> {
       return;
     }
 
-    await _trackingApi.startManualPersistentTracking();
+    await _trackingApi.startTrackAsPersistent();
     setState(() {
       _isManualTracking = true;
     });

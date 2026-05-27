@@ -13,7 +13,7 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "FlutterFramework", path: "../FlutterFramework"),
-        .package(url: "https://github.com/Mobile-Telematics/telematicsSDK-iOS-new-SPM.git", from: "7.0.3")
+        .package(url: "https://github.com/Mobile-Telematics/telematicsSDK-iOS-new-SPM.git", from: "7.1.0")
     ],
     targets: [
         .target(

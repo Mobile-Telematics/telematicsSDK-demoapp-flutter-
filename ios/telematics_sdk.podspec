@@ -26,5 +26,5 @@ A new flutter plugin project.
   s.swift_version = '5.0'
 
     # Dependency
-    s.dependency 'TelematicsSDK', '~> 7.0.3'
+    s.dependency 'TelematicsSDK', '~> 7.1.0'
 end

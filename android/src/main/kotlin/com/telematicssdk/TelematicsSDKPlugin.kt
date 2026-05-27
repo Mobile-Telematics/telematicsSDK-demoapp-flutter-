@@ -87,7 +87,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "isTracking" -> isTracking(result)
             "setEnableSdk" -> setEnableSdk(call, result)
             "startManualTracking" -> startManualTracking(result)
-            "startManualPersistentTracking" -> startManualPersistentTracking(result)
+            "startTrackAsPersistent" -> startTrackAsPersistent(result)
             "stopManualTracking" -> stopManualTracking(result)
             "uploadUnsentTrips" -> uploadUnsentTrips(result)
             "getUnsentTripCount" -> getUnsentTripCount(result)
@@ -201,7 +201,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         result.success(startResult)
     }
 
-    private fun startManualPersistentTracking(result: Result) {
+    private fun startTrackAsPersistent(result: Result) {
         val startResult = api.startPersistentTracking()
 
         result.success(startResult)

@@ -1,7 +1,7 @@
 // swift-tools-version: 5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 //
-//  Generated file. Do not edit.
+// Generated file. Do not edit.
 //
 
 import PackageDescription
@@ -15,13 +15,15 @@ let package = Package(
         .library(name: "FlutterGeneratedPluginSwiftPackage", type: .static, targets: ["FlutterGeneratedPluginSwiftPackage"])
     ],
     dependencies: [
-        .package(name: "telematics_sdk", path: "../.packages/telematics_sdk")
+        .package(name: "telematics_sdk", path: "../.packages/telematicsSDK-demoapp-flutter-"),
+        .package(name: "FlutterFramework", path: "../.packages/FlutterFramework")
     ],
     targets: [
         .target(
             name: "FlutterGeneratedPluginSwiftPackage",
             dependencies: [
-                .product(name: "telematics-sdk", package: "telematics_sdk")
+                .product(name: "telematics-sdk", package: "telematics_sdk"),
+                .product(name: "FlutterFramework", package: "FlutterFramework")
             ]
         )
     ]

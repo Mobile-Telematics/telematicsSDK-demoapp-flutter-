@@ -9,16 +9,14 @@ struct Constants {
     }
 }
 
-public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
+public class TelematicsSDKPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycleDelegate {
     
     private let channel: FlutterMethodChannel
-    private let sceneDelegate: FlutterSceneLifeCycleDelegate
     private var speedLimitTimeThreshold: TimeInterval = -1
     private var speedLimitKmH: Double = -1
     
-    public init(methodChannel: FlutterMethodChannel, sceneDelegate: FlutterSceneLifeCycleDelegate) {
+    public init(methodChannel: FlutterMethodChannel) {
         self.channel = methodChannel
-        self.sceneDelegate = sceneDelegate
         super.init()
         RPEntry.instance.lowPowerModeDelegate = self
         RPEntry.instance.locationDelegate = self
@@ -29,14 +27,10 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "telematics_sdk", binaryMessenger: registrar.messenger())
-        let sceneDelegate = TelematicsSceneLifeCycleDelegate()
-        let instance = TelematicsSDKPlugin(
-            methodChannel: channel,
-            sceneDelegate: sceneDelegate
-        )
+        let instance = TelematicsSDKPlugin(methodChannel: channel)
         registrar.addMethodCallDelegate(instance, channel: channel)
         registrar.addApplicationDelegate(instance)
-        registrar.addSceneDelegate(sceneDelegate)
+        registrar.addSceneDelegate(instance)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -59,8 +53,8 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
             setEnableSdk(call, result: result)
         case "startManualTracking":
             startManualTracking(result)
-        case "startManualPersistentTracking":
-            startManualPersistentTracking(result)
+        case "startTrackAsPersistent":
+            startTrackAsPersistent(result)
         case "stopManualTracking":
             stopManualTracking(result)
         case "uploadUnsentTrips":
@@ -116,7 +110,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     }
     
     private func isInitialized(_ result: @escaping FlutterResult) {
-        result(RPEntry.isInitialized)
+        result(RPEntry.isInitialized())
     }
     
     private func logout(_ result: @escaping FlutterResult) {
@@ -125,11 +119,12 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     }
     
     private func getDeviceId(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance.virtualDeviceToken)
+        
+        result(RPEntry.instance.getDeviceId())
     }
     
     private func isAllRequiredPermissionsGranted(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance.isAllRequiredPermissionsGranted())
+        result(RPEntry.instance.isAllRequiredPermissionsAndSensorsGranted())
     }
     
     private func isSDKEnabled(_ result: @escaping FlutterResult) {
@@ -137,14 +132,27 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     }
     
     private func isTracking(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance.isTrackingActive())
+        result(RPEntry.instance.isTracking())
     }
     
     private func setDeviceID(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
-        let deviceId = args["deviceId"] as? String
-        RPEntry.instance.virtualDeviceToken = deviceId
-        result(nil)
+        guard let deviceId = args["deviceId"] as? String else {
+            result(FlutterError(code: FlutterPluginCode.failure,
+                                message: "deviceId id invalid",
+                                details: nil)
+            )
+            return
+        }
+        do {
+            try RPEntry.instance.setDeviceID(deviceId: deviceId)
+            result(nil)
+        } catch {
+            result(FlutterError(code: FlutterPluginCode.failure,
+                                message: error.localizedDescription,
+                                details: nil)
+            )
+        }
     }
     
     private func setEnableSdk(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -159,12 +167,12 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
         let args = call.arguments as! [String: Any]
         let value = args["value"] as! Bool
         
-        RPEntry.instance.disableTracking = value
+        RPEntry.instance.setDisableTracking(disableTracking: value)
         result(nil)
     }
     
     private func isDisableTracking(result: @escaping FlutterResult) {
-        result(RPEntry.instance.disableTracking)
+        result(RPEntry.instance.isDisableTracking())
     }
 
     private func startManualTracking(_ result: @escaping FlutterResult) {
@@ -172,8 +180,8 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
         result(true)
     }
 
-    private func startManualPersistentTracking(_ result: @escaping FlutterResult) {
-        RPEntry.instance.startPersistentTracking()
+    private func startTrackAsPersistent(_ result: @escaping FlutterResult) {
+        RPEntry.instance.startTrackAsPersistent()
         result(true)
     }
 
@@ -188,7 +196,9 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     }
     
     private func getUnsentTripCount(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance.getUnsentTripCount())
+        RPEntry.instance.getUnsentTripCount { unsentTripsCount in
+            result(unsentTripsCount)
+        }
     }
     
     private func sendCustomHeartbeats(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -216,7 +226,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     //MARK: - Future track tags
     
-    private func getFutureTagStatusStrung(from status: RPTagStatus) -> String {
+    private func getFutureTagStatusString(from status: RPTagStatus) -> String {
         switch status {
         case .success:
             return "SUCCESS"
@@ -224,7 +234,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
             return "OFFLINE"
         case .errorTagOperation:
             return "ERROR_TAG_OPERATION"
-        case .invalidDeviceToken:
+        case .invalidDeviceId:
             return "INVALID_DEVICE_TOKEN"
         @unknown default:
             return ""
@@ -257,7 +267,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
                 strTags.append(strTag)
             }
             
-            let status = self?.getFutureTagStatusStrung(from: status) ?? "SUCCESS"
+            let status = self?.getFutureTagStatusString(from: status) ?? "SUCCESS"
             let timestamp: Int = Int(tags.first?.timestamp.timeIntervalSince1970 ?? 0)
             let json: [String : Any?] = [
                 "status": status,
@@ -292,7 +302,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
                 return
             }
             
-            let status = self?.getFutureTagStatusStrung(from: status) ?? "SUCCESS"
+            let status = self?.getFutureTagStatusString(from: status) ?? "SUCCESS"
             let tagJson: [String: Any?] = [
                 "tag": futureTag.tag,
                 "source": futureTag.source,
@@ -345,7 +355,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
                 return
             }
             
-            let status = self?.getFutureTagStatusStrung(from: status) ?? "SUCCESS"
+            let status = self?.getFutureTagStatusString(from: status) ?? "SUCCESS"
             let tagJson: [String: Any?] = [
                 "tag": futureTag.tag,
                 "source": futureTag.source,
@@ -377,7 +387,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     private func removeAllFutureTrackTags(_ result: @escaping FlutterResult) {
         RPEntry.instance.api.removeAllFutureTrackTags { [weak self] status, error in
-            let status = self?.getFutureTagStatusStrung(from: status) ?? "SUCCESS"
+            let status = self?.getFutureTagStatusString(from: status) ?? "SUCCESS"
             let json: [String : Any?] = [
                 "status": status,
                 "time": 0
@@ -390,11 +400,11 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     
     /// wrongAccuracyAuthorization
     private func isWrongAccuracyState(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance.wrongAccuracyState)
+        result(RPEntry.instance.isWrongAccuracyState())
     }
     
     private func getApiLanguage(_ result: @escaping FlutterResult) {
-        let language = RPEntry.instance.apiLanguage
+        let language = RPEntry.instance.getApiLanguage()
         switch language {
         case .none:
             result("None")
@@ -418,26 +428,26 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
             return
         }
         if language == "None" {
-            RPEntry.instance.apiLanguage = .none
+            RPEntry.instance.setApiLanguage(apiLanguage: .none)
         }
         if language == "English" {
-            RPEntry.instance.apiLanguage = .english
+            RPEntry.instance.setApiLanguage(apiLanguage: .english)
         }
         if language == "Russian" {
-            RPEntry.instance.apiLanguage = .russian
+            RPEntry.instance.setApiLanguage(apiLanguage: .russian)
         }
         if language == "Portuguese" {
-            RPEntry.instance.apiLanguage = .portuguese
+            RPEntry.instance.setApiLanguage(apiLanguage: .portuguese)
         }
         if language == "Spanish" {
-            RPEntry.instance.apiLanguage = .spanish
+            RPEntry.instance.setApiLanguage(apiLanguage: .spanish)
         }
         
         result(nil)
     }
     
     private func isAggressiveHeartbeats(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance.aggressiveHeartbeat())
+        result(RPEntry.instance.isAggressiveHeartbeats())
     }
     
     private func setAccidentDetectionEnabled(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
@@ -446,7 +456,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
             result(nil)
             return
         }
-        RPEntry.instance.enableAccidents(value)
+        RPEntry.instance.setAccidentDetectionEnabled(value)
         result(nil)
     }
     
@@ -457,16 +467,16 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
             return
         }
         let sensitivity = RPAccidentDetectionSensitivity.init(rawValue: value) ?? .normal
-        RPEntry.instance.accidentDetectionSensitivity = sensitivity
+        RPEntry.instance.setAccidentDetectionSensitivity(sensitivity: sensitivity)
         result(nil)
     }
     
     private func isAccidentDetectionEnabled(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance.isEnabledAccidents())
+        result(RPEntry.instance.isAccidentDetectionEnabled())
     }
     
     private func isRTLDEnabled(_ result: @escaping FlutterResult) {
-        result(RPEntry.instance.isRTDEnabled())
+        result(RPEntry.instance.isRTLDEnabled())
     }
     
     private func requestLocationAlwaysPermission(_ result: @escaping FlutterResult) {
@@ -541,6 +551,25 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin {
     public func applicationDidBecomeActive(_ application: UIApplication) {
         RPEntry.instance.applicationDidBecomeActive(application)
     }
+    
+    // MARK: - Scene Delegate
+    
+    public func sceneDidDisconnect(_ scene: UIScene) { }
+    
+    public func sceneWillEnterForeground(_ scene: UIScene) {
+        RPEntry.instance.sceneWillEnterForeground(scene)
+    }
+    
+    public func sceneDidBecomeActive(_ scene: UIScene) {
+        RPEntry.instance.sceneDidBecomeActive(scene)
+    }
+    
+    public func sceneWillResignActive(_ scene: UIScene) { }
+    
+    public func sceneDidEnterBackground(_ scene: UIScene) {
+        RPEntry.instance.sceneDidEnterBackground(scene)
+    }
+    
 }
 
 // MARK: - RPLowPowerModeDelegate
@@ -571,7 +600,7 @@ extension TelematicsSDKPlugin: RPAccuracyAuthorizationDelegate {
 }
 
 // MARK: - RPRTDLDelegate
-extension TelematicsSDKPlugin: RPRTDLDelegate {
+extension TelematicsSDKPlugin: RPRTLDDelegate {
     
     public func rtldColectedData() {
         self.channel.invokeMethod("onRTLDCollectedData", arguments: nil)

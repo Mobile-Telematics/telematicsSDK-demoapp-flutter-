@@ -18,7 +18,7 @@ import 'package:telematics_sdk/telematics_sdk.dart';
 /// Typical usage:
 /// 1. Ensure the SDK is initialized on the native side.
 /// 2. Call [setDeviceID] to set the virtual device token/device id.
-/// 3. Start tracking with [startManualTracking] or [startManualPersistentTracking].
+/// 3. Start tracking with [startManualTracking] or [startTrackAsPersistent].
 /// 4. Listen to streams like [trackingStateChanged], [locationChanged], and
 ///    iOS-specific signals such as [iOSWrongAccuracyAuthorization].
 class TrackingApi {
@@ -148,8 +148,8 @@ class TrackingApi {
   ///
   /// Returns `true` if tracking was started, `false` if it was already running,
   /// or `null` if the platform did not provide a result.
-  Future<bool?> startManualPersistentTracking() =>
-      _channel.invokeMethod('startManualPersistentTracking');
+  Future<bool?> startTrackAsPersistent() =>
+      _channel.invokeMethod('startTrackAsPersistent');
 
   /// Stops tracking manually.
   ///
