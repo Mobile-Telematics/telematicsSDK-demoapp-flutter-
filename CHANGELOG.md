@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+* Added passiveDetectionOn to Telematics Android SDK Settings.
+
 ## 1.1.0
 
 * Added Telematics iOS SDK v7.1.0 support.

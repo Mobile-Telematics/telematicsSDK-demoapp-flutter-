@@ -88,6 +88,7 @@ class App: TelematicsSDKApp() {
             .stopTrackingTimeout(Settings.stopTrackingTimeHigh)
             .accuracy(Settings.accuracyHigh)
             .autoStartOn(true)
+            .passiveDetectionOn(true)
         return settings
     }
 }

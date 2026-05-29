@@ -25,12 +25,14 @@ open class TelematicsSDKApp : Application() {
      * Stop tracking time is 5 minute.
      * Parking radius is 100 meters.
      * Auto start tracking is true.
+     * Passive detection is true.
      */
     open fun setTelematicsSettings(): Settings {
         val settings = Settings()
             .stopTrackingTimeout(Settings.stopTrackingTimeHigh)
             .accuracy(Settings.accuracyHigh)
             .autoStartOn(true)
+            .passiveDetectionOn(true)
         Log.d("TelematicsSDKApp", "setTelematicsSettings")
         return settings
     }
