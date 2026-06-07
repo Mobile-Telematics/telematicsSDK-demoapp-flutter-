@@ -65,21 +65,17 @@ void main() {
         );
 
         for (final actual in wizardResults) {
-          await handler.handle(
-            MethodCall(
-              'onPermissionWizardResult',
-              actual,
-            ),
-          );
+          await handler.handle(MethodCall('onPermissionWizardResult', actual));
         }
 
         expect(
-            events,
-            equals([
-              PermissionWizardResult.allGranted,
-              PermissionWizardResult.notAllGranted,
-              PermissionWizardResult.canceled,
-            ]));
+          events,
+          equals([
+            PermissionWizardResult.allGranted,
+            PermissionWizardResult.notAllGranted,
+            PermissionWizardResult.canceled,
+          ]),
+        );
       });
     });
 
@@ -91,13 +87,9 @@ void main() {
       });
 
       test('emits true when handles corresponding value', () async {
-        handler.lowPowerMode.listen(
-          expectAsync1<void, bool>(events.add),
-        );
+        handler.lowPowerMode.listen(expectAsync1<void, bool>(events.add));
 
-        await handler.handle(
-          const MethodCall('onLowPowerMode', true),
-        );
+        await handler.handle(const MethodCall('onLowPowerMode', true));
 
         expect(events, equals([true]));
       });
@@ -106,24 +98,19 @@ void main() {
         const testValues = <bool>[true, false];
 
         handler.lowPowerMode.listen(
-          expectAsync1<void, bool>(
-            events.add,
-            count: testValues.length,
-          ),
+          expectAsync1<void, bool>(events.add, count: testValues.length),
         );
 
         for (final value in testValues) {
-          await handler.handle(
-            MethodCall('onLowPowerMode', value),
-          );
+          await handler.handle(MethodCall('onLowPowerMode', value));
         }
 
         expect(events, equals([true, false]));
       });
     });
 
-    group("doesn't break down with empty callbacks:", () {
-      test('empty onTagAdd', () async {
+    group("doesn't break down without listeners:", () {
+      test('onTagAdd', () async {
         final argument = {
           'status': 'SUCCESS',
           'tag': jsonEncode({'source': 'source', 'tag': 'tag'}),
@@ -133,7 +120,7 @@ void main() {
         await handler.handle(MethodCall('onTagAdd', argument));
       });
 
-      test('empty onTagRemove', () async {
+      test('onTagRemove', () async {
         final argument = {
           'status': 'SUCCESS',
           'tag': jsonEncode({'source': 'source', 'tag': 'tag'}),
@@ -143,17 +130,13 @@ void main() {
         await handler.handle(MethodCall('onTagRemove', argument));
       });
 
-      test('empty onAllTagsRemove', () async {
-        final argument = {
-          'status': 'SUCCESS',
-          'deactivatedTagsCount': 1,
-          'time': 2,
-        };
+      test('onAllTagsRemove', () async {
+        final argument = {'status': 'SUCCESS', 'time': 2};
 
         await handler.handle(MethodCall('onAllTagsRemove', argument));
       });
 
-      test('empty onGetTags', () async {
+      test('onGetTags', () async {
         final argument = {
           'status': 'SUCCESS',
           'tags': List.generate(
@@ -169,18 +152,6 @@ void main() {
     });
 
     group('onTagAdd', () {
-      late Map<String, Object> result;
-
-      setUp(() {
-        handler.onTagAdd = (status, tag, activationTime) {
-          result = {
-            'status': status,
-            'tag': tag,
-            'activationTime': activationTime,
-          };
-        };
-      });
-
       test('emits result with success status', () async {
         final argument = {
           'status': 'SUCCESS',
@@ -188,11 +159,29 @@ void main() {
           'activationTime': 1,
         };
 
+        final resultFuture = handler.futureTrackTagAdded.first;
         await handler.handle(MethodCall('onTagAdd', argument));
+        final result = await resultFuture;
 
-        expect(result['status'], equals(Status.success));
-        expect(result['tag'], isA<Tag>());
-        expect(result['activationTime'], equals(1));
+        expect(result.status, equals(Status.success));
+        expect(result.tag, isA<Tag>());
+        expect(result.activationTime, equals(1));
+      });
+
+      test('emits result with null source', () async {
+        final argument = {
+          'status': 'SUCCESS',
+          'tag': jsonEncode({'source': null, 'tag': 'tag'}),
+          'activationTime': 1,
+        };
+
+        final resultFuture = handler.futureTrackTagAdded.first;
+        await handler.handle(MethodCall('onTagAdd', argument));
+        final result = await resultFuture;
+
+        expect(result.status, equals(Status.success));
+        expect(result.tag.source, isNull);
+        expect(result.tag.tag, 'tag');
       });
 
       test('emits result with someError status', () async {
@@ -202,27 +191,17 @@ void main() {
           'activationTime': 1,
         };
 
+        final resultFuture = handler.futureTrackTagAdded.first;
         await handler.handle(MethodCall('onTagAdd', argument));
+        final result = await resultFuture;
 
-        expect(result['status'], equals(Status.someError));
-        expect(result['tag'], isA<Tag>());
-        expect(result['activationTime'], equals(1));
+        expect(result.status, equals(Status.someError));
+        expect(result.tag, isA<Tag>());
+        expect(result.activationTime, equals(1));
       });
     });
 
     group('onTagRemove', () {
-      late Map<String, Object> result;
-
-      setUp(() {
-        handler.onTagRemove = (status, tag, deactivationTime) {
-          result = {
-            'status': status,
-            'tag': tag,
-            'deactivationTime': deactivationTime,
-          };
-        };
-      });
-
       test('emits result with success status', () async {
         final argument = {
           'status': 'SUCCESS',
@@ -230,11 +209,29 @@ void main() {
           'deactivationTime': 1,
         };
 
+        final resultFuture = handler.futureTrackTagRemoved.first;
         await handler.handle(MethodCall('onTagRemove', argument));
+        final result = await resultFuture;
 
-        expect(result['status'], equals(Status.success));
-        expect(result['tag'], isA<Tag>());
-        expect(result['deactivationTime'], equals(1));
+        expect(result.status, equals(Status.success));
+        expect(result.tag, isA<Tag>());
+        expect(result.deactivationTime, equals(1));
+      });
+
+      test('emits result with null source', () async {
+        final argument = {
+          'status': 'SUCCESS',
+          'tag': jsonEncode({'source': null, 'tag': 'tag'}),
+          'deactivationTime': 1,
+        };
+
+        final resultFuture = handler.futureTrackTagRemoved.first;
+        await handler.handle(MethodCall('onTagRemove', argument));
+        final result = await resultFuture;
+
+        expect(result.status, equals(Status.success));
+        expect(result.tag.source, isNull);
+        expect(result.tag.tag, 'tag');
       });
 
       test('emits result with someError status', () async {
@@ -244,68 +241,41 @@ void main() {
           'deactivationTime': 1,
         };
 
+        final resultFuture = handler.futureTrackTagRemoved.first;
         await handler.handle(MethodCall('onTagRemove', argument));
+        final result = await resultFuture;
 
-        expect(result['status'], equals(Status.someError));
-        expect(result['tag'], isA<Tag>());
-        expect(result['deactivationTime'], equals(1));
+        expect(result.status, equals(Status.someError));
+        expect(result.tag, isA<Tag>());
+        expect(result.deactivationTime, equals(1));
       });
     });
 
     group('onAllTagsRemove', () {
-      late Map<String, Object> result;
-
-      setUp(() {
-        handler.onAllTagsRemove = (status, time) {
-          result = {
-            'status': status,
-            'time': time,
-          };
-        };
-      });
-
       test('emits result with success status', () async {
-        final argument = {
-          'status': 'SUCCESS',
-          'deactivatedTagsCount': 1,
-          'time': 2,
-        };
+        final argument = {'status': 'SUCCESS', 'time': 2};
 
+        final resultFuture = handler.allFutureTrackTagsRemoved.first;
         await handler.handle(MethodCall('onAllTagsRemove', argument));
+        final result = await resultFuture;
 
-        expect(result['status'], equals(Status.success));
-        expect(result['deactivatedTagsCount'], equals(1));
-        expect(result['time'], equals(2));
+        expect(result.status, equals(Status.success));
+        expect(result.time, equals(2));
       });
 
       test('emits result with someError status', () async {
-        final argument = {
-          'status': '42',
-          'deactivatedTagsCount': 1,
-          'time': 2,
-        };
+        final argument = {'status': '42', 'time': 2};
 
+        final resultFuture = handler.allFutureTrackTagsRemoved.first;
         await handler.handle(MethodCall('onAllTagsRemove', argument));
+        final result = await resultFuture;
 
-        expect(result['status'], equals(Status.someError));
-        expect(result['deactivatedTagsCount'], equals(1));
-        expect(result['time'], equals(2));
+        expect(result.status, equals(Status.someError));
+        expect(result.time, equals(2));
       });
     });
 
     group('onGetTags', () {
-      late Map<String, Object?> result;
-
-      setUp(() {
-        handler.onGetTags = (status, tags, time) {
-          result = {
-            'status': status,
-            'tags': tags,
-            'time': time,
-          };
-        };
-      });
-
       test('emits result with success status', () async {
         final argument = {
           'status': 'SUCCESS',
@@ -317,12 +287,51 @@ void main() {
           'time': 2,
         };
 
+        final resultFuture = handler.futureTrackTagsReceived.first;
         await handler.handle(MethodCall('onGetTags', argument));
+        final result = await resultFuture;
 
-        expect(result['status'], equals(Status.success));
-        expect(result['tags'], isA<List<Tag>>());
-        expect((result['tags'] as List<Tag>).length, 3);
-        expect(result['time'], equals(2));
+        expect(result.status, equals(Status.success));
+        expect(result.tags, isA<List<Tag>>());
+        expect(result.tags?.length, 3);
+        expect(result.time, equals(2));
+      });
+
+      test('emits result with Android dynamic list payload', () async {
+        final argument = {
+          'status': 'SUCCESS',
+          'tags': <dynamic>[
+            jsonEncode({'source': 'source', 'tag': 'tag'}),
+          ],
+          'time': 2,
+        };
+
+        final resultFuture = handler.futureTrackTagsReceived.first;
+        await handler.handle(MethodCall('onGetTags', argument));
+        final result = await resultFuture;
+
+        expect(result.status, equals(Status.success));
+        expect(result.tags, isA<List<Tag>>());
+        expect(result.tags?.single.tag, 'tag');
+        expect(result.time, equals(2));
+      });
+
+      test('emits result with null source tag', () async {
+        final argument = {
+          'status': 'SUCCESS',
+          'tags': [
+            jsonEncode({'source': null, 'tag': 'tag'}),
+          ],
+          'time': 2,
+        };
+
+        final resultFuture = handler.futureTrackTagsReceived.first;
+        await handler.handle(MethodCall('onGetTags', argument));
+        final result = await resultFuture;
+
+        expect(result.status, equals(Status.success));
+        expect(result.tags?.single.source, isNull);
+        expect(result.tags?.single.tag, 'tag');
       });
 
       test('emits result with someError status', () async {
@@ -336,12 +345,14 @@ void main() {
           'time': 2,
         };
 
+        final resultFuture = handler.futureTrackTagsReceived.first;
         await handler.handle(MethodCall('onGetTags', argument));
+        final result = await resultFuture;
 
-        expect(result['status'], equals(Status.someError));
-        expect(result['tags'], isA<List<Tag>>());
-        expect((result['tags'] as List).length, 3);
-        expect(result['time'], equals(2));
+        expect(result.status, equals(Status.someError));
+        expect(result.tags, isA<List<Tag>>());
+        expect(result.tags?.length, 3);
+        expect(result.time, equals(2));
       });
     });
   });

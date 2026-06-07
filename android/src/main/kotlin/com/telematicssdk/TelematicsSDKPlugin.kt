@@ -39,6 +39,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
     private lateinit var activityPluginBinding: ActivityPluginBinding
+    private var tagsProcessingListener: TagsProcessingListenerImp? = null
 
     private val api = TrackingApi.getInstance()
 
@@ -54,7 +55,9 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         context = flutterPluginBinding.applicationContext
 
         /// register callbacks
-        api.addTagsProcessingCallback(TagsProcessingListenerImp(channel))
+        val listener = TagsProcessingListenerImp(channel)
+        tagsProcessingListener = listener
+        api.addTagsProcessingCallback(listener)
         api.setLocationListener(LocationListenerImp(channel))
         api.registerCallback((TrackingStateListenerImpl(channel)))
     }
@@ -333,7 +336,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
     private fun addFutureTrackTag(call: MethodCall, result: Result) {
         val tag = call.argument<String?>("tag") as String
-        val source = call.argument<String?>("source") as String
+        val source = call.argument<String?>("source")
 
         api.addFutureTrackTag(tag, source)
 
@@ -342,6 +345,7 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
     private fun removeFutureTrackTag(call: MethodCall, result: Result) {
         val tag = call.argument<String?>("tag") as String
+        val source = call.argument<String?>("source")
 
         api.removeFutureTrackTag(tag)
 

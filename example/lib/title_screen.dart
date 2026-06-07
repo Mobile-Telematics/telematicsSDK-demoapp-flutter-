@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:telematics_sdk/telematics_sdk.dart';
 
 const _sizedBoxSpace = SizedBox(height: 24);
+const _futureTrackTag = 'MyBestTripTagForRPTest';
+const _futureTrackTagSource = 'RPTestSource';
 
 class TitleScreen extends StatefulWidget {
   TitleScreen({Key? key}) : super(key: key);
@@ -19,6 +21,11 @@ class _TitleScreenState extends State<TitleScreen> {
   _onPermissionWizardStateChanged;
   late StreamSubscription<bool> _onLowerPower;
   late StreamSubscription<TrackLocation> _onLocationChanged;
+  late StreamSubscription<FutureTrackTagAddResult> _onFutureTrackTagAdded;
+  late StreamSubscription<FutureTrackTagRemoveResult> _onFutureTrackTagRemoved;
+  late StreamSubscription<FutureTrackTagsRemoveResult>
+  _onAllFutureTrackTagsRemoved;
+  late StreamSubscription<FutureTrackTagsResult> _onFutureTrackTagsReceived;
 
   /// Current device token as reported by the native SDK ([TrackingApi.getDeviceId]).
   var _sdkDeviceId = '';
@@ -41,6 +48,17 @@ class _TitleScreenState extends State<TitleScreen> {
     _onLowerPower = _trackingApi.lowPowerMode.listen(_onLowPowerResult);
     _onLocationChanged = _trackingApi.locationChanged.listen(
       _onLocationChangedResult,
+    );
+    _onFutureTrackTagAdded = _trackingApi.futureTrackTagAdded.listen(
+      _onFutureTrackTagAddedResult,
+    );
+    _onFutureTrackTagRemoved = _trackingApi.futureTrackTagRemoved.listen(
+      _onFutureTrackTagRemovedResult,
+    );
+    _onAllFutureTrackTagsRemoved = _trackingApi.allFutureTrackTagsRemoved
+        .listen(_onAllFutureTrackTagsRemovedResult);
+    _onFutureTrackTagsReceived = _trackingApi.futureTrackTagsReceived.listen(
+      _onFutureTrackTagsReceivedResult,
     );
     initPlatformState();
   }
@@ -174,6 +192,40 @@ class _TitleScreenState extends State<TitleScreen> {
             },
           ),
           const SizedBox(height: 8),
+          const Text('Future Track Tags'),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: _onGetFutureTrackTags,
+            child: const Text('Get Future Track Tags'),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _onAddFutureTrackTag,
+                  child: const Text(
+                    'Add Future Track Tag',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _onRemoveFutureTrackTag,
+                  child: const Text(
+                    'Remove Future Track Tag',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          ElevatedButton(
+            onPressed: _onRemoveAllFutureTrackTags,
+            child: const Text('Remove All Future Track Tags'),
+          ),
+          const SizedBox(height: 8),
           TextFormField(
             controller: _tokenEditingController,
             decoration: const InputDecoration(
@@ -304,6 +356,10 @@ class _TitleScreenState extends State<TitleScreen> {
     _onPermissionWizardStateChanged.cancel();
     _onLowerPower.cancel();
     _onLocationChanged.cancel();
+    _onFutureTrackTagAdded.cancel();
+    _onFutureTrackTagRemoved.cancel();
+    _onAllFutureTrackTagsRemoved.cancel();
+    _onFutureTrackTagsReceived.cancel();
     _maxPersistentIntervalController.dispose();
     _tokenEditingController.dispose();
     super.dispose();
@@ -372,6 +428,71 @@ class _TitleScreenState extends State<TitleScreen> {
     } catch (e) {
       _showSnackBar('setTrackingMode failed: $e');
     }
+  }
+
+  Future<void> _onGetFutureTrackTags() async {
+    try {
+      await _trackingApi.getFutureTrackTags();
+    } catch (e) {
+      _showSnackBar('getFutureTrackTags failed: $e');
+    }
+  }
+
+  Future<void> _onAddFutureTrackTag() async {
+    try {
+      await _trackingApi.addFutureTrackTag(
+        tag: _futureTrackTag,
+        source: _futureTrackTagSource,
+      );
+    } catch (e) {
+      _showSnackBar('addFutureTrackTag failed: $e');
+    }
+  }
+
+  Future<void> _onRemoveFutureTrackTag() async {
+    try {
+      await _trackingApi.removeFutureTrackTag(
+        tag: _futureTrackTag,
+        source: _futureTrackTagSource,
+      );
+    } catch (e) {
+      _showSnackBar('removeFutureTrackTag failed: $e');
+    }
+  }
+
+  Future<void> _onRemoveAllFutureTrackTags() async {
+    try {
+      await _trackingApi.removeAllFutureTrackTags();
+    } catch (e) {
+      _showSnackBar('removeAllFutureTrackTags failed: $e');
+    }
+  }
+
+  void _onFutureTrackTagAddedResult(FutureTrackTagAddResult result) {
+    _showSnackBar(
+      'Future Track Tag add result: status=${result.status}, tag=${result.tag.tag}, source=${result.tag.source}, activationTime=${result.activationTime}',
+    );
+  }
+
+  void _onFutureTrackTagRemovedResult(FutureTrackTagRemoveResult result) {
+    _showSnackBar(
+      'Future Track Tag remove result: status=${result.status}, tag=${result.tag.tag}, source=${result.tag.source}, deactivationTime=${result.deactivationTime}',
+    );
+  }
+
+  void _onAllFutureTrackTagsRemovedResult(FutureTrackTagsRemoveResult result) {
+    _showSnackBar(
+      'Remove all Future Track Tags result: status=${result.status}, time=${result.time}',
+    );
+  }
+
+  void _onFutureTrackTagsReceivedResult(FutureTrackTagsResult result) {
+    final tagsText = result.tags
+        ?.map((tag) => '${tag.tag} (${tag.source})')
+        .join(', ');
+    _showSnackBar(
+      'Future Track Tags result: status=${result.status}, tags=${tagsText?.isEmpty ?? true ? 'none' : tagsText}, time=${result.time}',
+    );
   }
 
   Future<void> _onEnableSDK() async {

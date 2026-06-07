@@ -489,7 +489,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycle
                 "tag": futureTag.tag,
                 "source": futureTag.source,
                 "type": futureTag.type,
-                "activationTime": Int(futureTag.timestamp.timeIntervalSince1970)
+                "deactivationTime": Int(futureTag.timestamp.timeIntervalSince1970)
             ]
             
             guard
@@ -506,7 +506,7 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycle
             let json: [String : Any?] = [
                 "status": status,
                 "tag": strTag,
-                "activationTime": Int(futureTag.timestamp.timeIntervalSince1970)
+                "deactivationTime": Int(futureTag.timestamp.timeIntervalSince1970)
             ]
             
             self?.channel.invokeMethod("onTagRemove", arguments: json)

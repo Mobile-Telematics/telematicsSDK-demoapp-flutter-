@@ -4,7 +4,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/services.dart';
 import 'package:telematics_sdk/src/data/accident_detection_sensitivity.dart';
 import 'package:telematics_sdk/src/data/api_language.dart';
-import 'package:telematics_sdk/src/data/future_track_callbacks.dart';
+import 'package:telematics_sdk/src/data/future_track_tag_result.dart';
 import 'package:telematics_sdk/src/data/tracking_mode.dart';
 import 'package:telematics_sdk/src/data/models/device_id_registration_state.dart';
 import 'package:telematics_sdk/src/data/models/permission_wizard_result.dart';
@@ -32,33 +32,7 @@ class TrackingApi {
   static const _channel = MethodChannel('telematics_sdk');
   final NativeCallHandler _handler = NativeCallHandler();
 
-  /// Callback invoked when a Future Track tag is added by the native SDK.
-  ///
-  /// See also: [addFutureTrackTag].
-  OnTagAddCallback? onTagAdd;
-
-  /// Callback invoked when a Future Track tag is removed by the native SDK.
-  ///
-  /// See also: [removeFutureTrackTag].
-  OnTagRemoveCallback? onTagRemove;
-
-  /// Callback invoked when all Future Track tags are removed by the native SDK.
-  ///
-  /// See also: [removeAllFutureTrackTags].
-  OnAllTagsRemoveCallback? onAllTagsRemove;
-
-  /// Callback invoked when the native SDK returns the current set of Future Track tags.
-  ///
-  /// See also: [getFutureTrackTags].
-  OnGetTagsCallback? onGetTags;
-
   TrackingApi() {
-    _handler
-      ..onTagAdd = onTagAdd
-      ..onTagRemove = onTagRemove
-      ..onAllTagsRemove = onAllTagsRemove
-      ..onGetTags = onGetTags;
-
     _channel.setMethodCallHandler(_handler.handle);
   }
 
@@ -98,6 +72,22 @@ class TrackingApi {
   ///
   /// Configure monitoring via [registerSpeedViolations].
   Stream<SpeedViolation> get speedViolation => _handler.speedViolation;
+
+  /// Emits the native SDK result for [addFutureTrackTag].
+  Stream<FutureTrackTagAddResult> get futureTrackTagAdded =>
+      _handler.futureTrackTagAdded;
+
+  /// Emits the native SDK result for [removeFutureTrackTag].
+  Stream<FutureTrackTagRemoveResult> get futureTrackTagRemoved =>
+      _handler.futureTrackTagRemoved;
+
+  /// Emits the native SDK result for [removeAllFutureTrackTags].
+  Stream<FutureTrackTagsRemoveResult> get allFutureTrackTagsRemoved =>
+      _handler.allFutureTrackTagsRemoved;
+
+  /// Emits the native SDK result for [getFutureTrackTags].
+  Stream<FutureTrackTagsResult> get futureTrackTagsReceived =>
+      _handler.futureTrackTagsReceived;
 
   /// Returns whether the native SDK is initialized.
   ///
@@ -242,18 +232,15 @@ class TrackingApi {
 
   /// Requests the current list of Future Track tags from the native SDK.
   ///
-  /// Results are delivered via [onGetTags].
+  /// Results are delivered via [futureTrackTagsReceived].
   Future<void> getFutureTrackTags() =>
       _channel.invokeMethod('getFutureTrackTags');
 
   /// Adds a Future Track tag.
   ///
   /// - Parameter tag: Tag identifier.
-  /// - Parameter source: Arbitrary source string (e.g. feature/module name).
-  Future<void> addFutureTrackTag({
-    required String tag,
-    required String source,
-  }) {
+  /// - Parameter source: Optional arbitrary source string (e.g. feature/module name).
+  Future<void> addFutureTrackTag({required String tag, String? source}) {
     return _channel.invokeMethod('addFutureTrackTag', {
       'tag': tag,
       'source': source,
@@ -263,8 +250,12 @@ class TrackingApi {
   /// Removes a Future Track tag.
   ///
   /// - Parameter tag: Tag identifier.
-  Future<void> removeFutureTrackTag({required String tag}) {
-    return _channel.invokeMethod('removeFutureTrackTag', {'tag': tag});
+  /// - Parameter source: Optional arbitrary source string. Used by iOS and ignored by Android.
+  Future<void> removeFutureTrackTag({required String tag, String? source}) {
+    return _channel.invokeMethod('removeFutureTrackTag', {
+      'tag': tag,
+      'source': source,
+    });
   }
 
   /// Removes all Future Track tags.

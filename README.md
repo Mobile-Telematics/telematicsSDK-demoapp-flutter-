@@ -386,20 +386,45 @@ await trackingApi.setAccidentDetectionSensitivity(sensitivity: AccidentDetection
 **Create new tag**
 The detailed information about using Tags is available [here](https://docs.damoov.com/docs/ios-sdk-incoming-tags)
 ```dart
+final tagAddedSubscription = trackingApi.futureTrackTagAdded.listen((result) {
+  print('status=${result.status}, tag=${result.tag.tag}, source=${result.tag.source}');
+});
+
 String tag = 'TAG';
-String source = 'App';
+String? source = 'App';
 await trackingApi.addFutureTrackTag(tag: tag, source: source);
+
+// source is optional:
+await trackingApi.addFutureTrackTag(tag: tag);
 ```
 
 **Remove a tag**
 ```dart
+final tagRemovedSubscription = trackingApi.futureTrackTagRemoved.listen((result) {
+  print('status=${result.status}, tag=${result.tag.tag}, source=${result.tag.source}');
+});
+
 String tag = 'TAG';
-await trackingApi.removeFutureTrackTag(tag: tag);
+String? source = 'App';
+await trackingApi.removeFutureTrackTag(tag: tag, source: source);
 ```
 
 **Remove all tags**
 ```dart
+final allTagsRemovedSubscription = trackingApi.allFutureTrackTagsRemoved.listen((result) {
+  print('status=${result.status}, time=${result.time}');
+});
+
 await trackingApi.removeAllFutureTrackTags();
+```
+
+**Get tags**
+```dart
+final tagsReceivedSubscription = trackingApi.futureTrackTagsReceived.listen((result) {
+  print('status=${result.status}, tags=${result.tags}');
+});
+
+await trackingApi.getFutureTrackTags();
 ```
 
 **Setting up the permission wizard**

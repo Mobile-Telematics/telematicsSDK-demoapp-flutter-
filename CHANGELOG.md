@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+* Fixed future tags adding and removing (main thread issue).
+
 ## 1.1.1
 
 * Added passiveDetectionOn to Telematics Android SDK Settings.

@@ -2,27 +2,31 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+import 'package:telematics_sdk/src/data/future_track_tag_result.dart';
 import 'package:telematics_sdk/src/data/models/speed_violation.dart';
 import 'package:telematics_sdk/src/data/models/tag.dart';
 import 'package:telematics_sdk/src/data/models/status.dart';
-import 'package:telematics_sdk/src/data/future_track_callbacks.dart';
 import 'package:telematics_sdk/src/data/models/permission_wizard_result.dart';
 import 'package:telematics_sdk/src/data/models/track_location.dart';
 
 class NativeCallHandler {
-  OnTagAddCallback? onTagAdd;
-  OnTagRemoveCallback? onTagRemove;
-  OnAllTagsRemoveCallback? onAllTagsRemove;
-  OnGetTagsCallback? onGetTags;
-
   Stream<PermissionWizardResult> get onPermissionWizardClose =>
       _onPermissionWizardClose.stream;
   Stream<bool> get lowPowerMode => _onLowPowerMode.stream;
   Stream<TrackLocation> get locationChanged => _onLocationChanged.stream;
   Stream<bool> get trackingStateChanged => _onTrackingStateChanged.stream;
-  Stream<void> get iOSWrongAccuracyAuthorization => _onIOSWrongAccuracyAuthorization.stream;
+  Stream<void> get iOSWrongAccuracyAuthorization =>
+      _onIOSWrongAccuracyAuthorization.stream;
   Stream<void> get iOSRTLDDataCollected => _onIOSRTLDDataCollected.stream;
   Stream<SpeedViolation> get speedViolation => _onSpeedViolation.stream;
+  Stream<FutureTrackTagAddResult> get futureTrackTagAdded =>
+      _onFutureTrackTagAdded.stream;
+  Stream<FutureTrackTagRemoveResult> get futureTrackTagRemoved =>
+      _onFutureTrackTagRemoved.stream;
+  Stream<FutureTrackTagsRemoveResult> get allFutureTrackTagsRemoved =>
+      _onAllFutureTrackTagsRemoved.stream;
+  Stream<FutureTrackTagsResult> get futureTrackTagsReceived =>
+      _onFutureTrackTagsReceived.stream;
 
   Future<Object> handle(MethodCall call) async {
     switch (call.method) {
@@ -70,6 +74,14 @@ class NativeCallHandler {
   final _onIOSWrongAccuracyAuthorization = StreamController<void>.broadcast();
   final _onIOSRTLDDataCollected = StreamController<void>.broadcast();
   final _onSpeedViolation = StreamController<SpeedViolation>.broadcast();
+  final _onFutureTrackTagAdded =
+      StreamController<FutureTrackTagAddResult>.broadcast();
+  final _onFutureTrackTagRemoved =
+      StreamController<FutureTrackTagRemoveResult>.broadcast();
+  final _onAllFutureTrackTagsRemoved =
+      StreamController<FutureTrackTagsRemoveResult>.broadcast();
+  final _onFutureTrackTagsReceived =
+      StreamController<FutureTrackTagsResult>.broadcast();
 
   void _onPermissionWizardResult(MethodCall call) {
     const wizardResultMapping = {
@@ -116,11 +128,11 @@ class NativeCallHandler {
     final speed = call.arguments['speed'] as double;
     final speedLimit = call.arguments['speedLimit'] as double;
     final speedViolation = SpeedViolation(
-        date: date,
-        latitude: latitude,
-        longitude: longitude,
-        speed: speed,
-        speedLimit: speedLimit
+      date: date,
+      latitude: latitude,
+      longitude: longitude,
+      speed: speed,
+      speedLimit: speedLimit,
     );
     _onSpeedViolation.add(speedViolation);
   }
@@ -135,7 +147,13 @@ class NativeCallHandler {
     final tag = Tag.fromJson(_tag);
     final activationTime = call.arguments['activationTime'] as int;
 
-    onTagAdd?.call(status, tag, activationTime);
+    _onFutureTrackTagAdded.add(
+      FutureTrackTagAddResult(
+        status: status,
+        tag: tag,
+        activationTime: activationTime,
+      ),
+    );
   }
 
   void _onTagRemove(MethodCall call) {
@@ -148,7 +166,13 @@ class NativeCallHandler {
     final tag = Tag.fromJson(_tag);
     final deactivationTime = call.arguments['deactivationTime'] as int;
 
-    onTagRemove?.call(status, tag, deactivationTime);
+    _onFutureTrackTagRemoved.add(
+      FutureTrackTagRemoveResult(
+        status: status,
+        tag: tag,
+        deactivationTime: deactivationTime,
+      ),
+    );
   }
 
   void _onAllTagsRemove(MethodCall call) {
@@ -157,19 +181,23 @@ class NativeCallHandler {
     final status = Status.fromString(_status);
     final time = call.arguments['time'] as int;
 
-    onAllTagsRemove?.call(status, time);
+    _onAllFutureTrackTagsRemoved.add(
+      FutureTrackTagsRemoveResult(status: status, time: time),
+    );
   }
 
   void _onGetTags(MethodCall call) {
     final _status = call.arguments['status'] as String;
-    final _tags = call.arguments['tags'] as List<String>?;
+    final _tagStrings = (call.arguments['tags'] as List?)?.cast<String>();
 
     final status = Status.fromString(_status);
-    final tags = _tags
+    final tags = _tagStrings
         ?.map((e) => Tag.fromJson(jsonDecode(e) as Map<String, dynamic>))
         .toList();
     final time = call.arguments['time'] as int;
 
-    onGetTags?.call(status, tags, time);
+    _onFutureTrackTagsReceived.add(
+      FutureTrackTagsResult(status: status, tags: tags, time: time),
+    );
   }
 }

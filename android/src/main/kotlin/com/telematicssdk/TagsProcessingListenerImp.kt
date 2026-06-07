@@ -1,5 +1,7 @@
 package com.telematicssdk
 
+import android.os.Handler
+import android.os.Looper
 import com.telematicssdk.tracking.TagsProcessingListener
 import com.telematicssdk.tracking.model.database.models.raw_tags.Status
 import com.telematicssdk.tracking.server.model.sdk.raw_tags.Tag
@@ -13,7 +15,9 @@ class TagsProcessingListenerImp(private val channel: MethodChannel) : TagsProces
                 "activationTime" to activationTime
         )
 
-        channel.invokeMethod("onTagAdd", json)
+        Handler(Looper.getMainLooper()).post {
+            channel.invokeMethod("onTagAdd", json)
+        }
     }
 
     override fun onTagRemove(status: Status, tag: Tag, deactivationTime: Long) {
@@ -23,7 +27,9 @@ class TagsProcessingListenerImp(private val channel: MethodChannel) : TagsProces
                 "deactivationTime" to deactivationTime
         )
 
-        channel.invokeMethod("onTagRemove", json)
+        Handler(Looper.getMainLooper()).post {
+            channel.invokeMethod("onTagRemove", json)
+        }
     }
 
     override fun onAllTagsRemove(status: Status, deactivatedTagsCount: Int, time: Long) {
@@ -32,7 +38,9 @@ class TagsProcessingListenerImp(private val channel: MethodChannel) : TagsProces
                 "time" to time
         )
 
-        channel.invokeMethod("onAllTagsRemove", json)
+        Handler(Looper.getMainLooper()).post {
+            channel.invokeMethod("onAllTagsRemove", json)
+        }
     }
 
     override fun onGetTags(status: Status, tags: Array<Tag>?, time: Long) {
@@ -42,6 +50,8 @@ class TagsProcessingListenerImp(private val channel: MethodChannel) : TagsProces
                 "time" to time
         )
 
-        channel.invokeMethod("onGetTags", json)
+        Handler(Looper.getMainLooper()).post {
+            channel.invokeMethod("onGetTags", json)
+        }
     }
 }

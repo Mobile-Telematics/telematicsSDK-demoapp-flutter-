@@ -7,6 +7,6 @@ export 'package:telematics_sdk/src/data/models/track_location.dart';
 export 'package:telematics_sdk/src/data/models/tracking_state.dart';
 export 'package:telematics_sdk/src/data/accident_detection_sensitivity.dart';
 export 'package:telematics_sdk/src/data/api_language.dart';
-export 'package:telematics_sdk/src/data/future_track_callbacks.dart';
+export 'package:telematics_sdk/src/data/future_track_tag_result.dart';
 export 'package:telematics_sdk/src/data/tracking_mode.dart';
 export 'package:telematics_sdk/src/tracking_api.dart';
