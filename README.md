@@ -11,6 +11,21 @@ When using Telematics SDK refer to these [terms of use](https://docs.damoov.com/
 
 For commercial use, you need create a developer workspace in [DataHub](https://app.damoov.com) and get `InstanceId` and `InstanceKey` auth keys to work with our API.
 
+### Add the plugin to your Flutter app
+
+`pubspec.yaml`
+
+```yaml
+dependencies:
+  telematics_sdk: ^1.1.2
+```
+
+Import it. Now in your Dart code, you can use:
+
+```dart
+import 'package:telematics_sdk/telematics_sdk.dart';
+```
+
 ### Android
 
 #### Please draw attention that Android SDK supports Gradle 8+ versions only.
