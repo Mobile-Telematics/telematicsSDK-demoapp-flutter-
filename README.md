@@ -17,7 +17,7 @@ For commercial use, you need create a developer workspace in [DataHub](https://a
 
 ```yaml
 dependencies:
-  telematics_sdk: ^1.1.2
+  telematics_sdk: ^1.1.3
 ```
 
 Import it. Now in your Dart code, you can use:

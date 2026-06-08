@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.3
+
+* Drop flutter <3.44 support.
+
 ## 1.1.2
 
 * Fixed future tags adding and removing (main thread issue).
