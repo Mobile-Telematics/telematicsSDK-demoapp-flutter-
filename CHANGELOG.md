@@ -2,7 +2,8 @@
 
 ## 1.1.3
 
-* Drop flutter <3.44 support.
+* Updates minimum supported SDK version to Flutter 3.44/Dart 3.12.
+* Migrates to built-in Kotlin
 
 ## 1.1.2
 
