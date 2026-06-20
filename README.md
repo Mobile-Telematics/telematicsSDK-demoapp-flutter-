@@ -480,6 +480,19 @@ If `[enableAggressivePermissionsWizardPage]` set to `true` the wizard will slide
 
 ### Available Methods (iOS only)
 
+**Get API language**
+```dart
+final apiLanguage = await trackingApi.getApiLanguage();
+```
+
+**Set API language**
+
+Supported values are `ApiLanguage.none`, `ApiLanguage.english`,
+`ApiLanguage.russian`, `ApiLanguage.portuguese`, and `ApiLanguage.spanish`.
+```dart
+await trackingApi.setApiLanguage(language: ApiLanguage.english);
+```
+
 **Check wrong accuracy state (Reduced Accuracy)**
 ```dart
 final wrongAccuracy = await trackingApi.isWrongAccuracyState();
@@ -537,7 +550,7 @@ await trackingApi.setAggressiveHeartbeats(value: enable)
 
 **Check state**
 ```dart
-final isAggressiveHeartbeats = await trackingApi.isAggressiveHeartbeat()
+final isAggressiveHeartbeats = await trackingApi.isAggressiveHeartbeats();
 ```
 ---
 
