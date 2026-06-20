@@ -5,6 +5,12 @@ A flutter plugin for tracking the person's driving behavior such as speeding, tu
 __Disclaimer__: This project uses Telematics SDK which belongs to DAMOOV PTE. LTD.  
 When using Telematics SDK refer to these [terms of use](https://docs.damoov.com/docs/license)
 
+## AI agent integration skill
+
+**We provide an AI agent skill that helps integrate Damoov TelematicsSDK into Flutter applications.** The skill can guide coding agents such as Claude Code, OpenAI Codex, and other AI coding tools through verified TelematicsSDK integration patterns, including dependency setup, lifecycle forwarding, tracking flows, tags, and migration away from deprecated APIs.
+
+Skill repository: [Mobile-Telematics/telematics-sdk-skills](https://github.com/Mobile-Telematics/telematics-sdk-skills).
+
 ## Getting Started
 
 ### Initial app setup & credentials
