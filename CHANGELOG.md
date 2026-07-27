@@ -6,6 +6,7 @@
 * Added Telematics Android SDK v4.1.0 support.
 * Updated Permission Wizard APIs for the new native SDK implementations.
 * Added properties, sub-units, and activity-log APIs.
+* Migrated Android app and plugin builds to AGP built-in Kotlin.
 
 ## 1.1.3
 
