@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+* Added Telematics iOS SDK v7.2.0 support.
+* Added Telematics Android SDK v4.1.0 support.
+* Updated Permission Wizard APIs for the new native SDK implementations.
+* Added properties, sub-units, and activity-log APIs.
+
 ## 1.1.3
 
 * Updates minimum supported SDK version to Flutter 3.44/Dart 3.12.

@@ -2,16 +2,16 @@ group 'com.telematicssdk'
 version '2.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '2.2.20'
-    ext.telematicssdk_tracking = '4.0.0'
+    ext.kotlin_version = '2.3.21'
+    ext.telematicssdk_tracking = '4.1.0'
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
         //noinspection GradleDependency
-        classpath 'com.android.tools.build:gradle:8.12.0'
+        classpath 'com.android.tools.build:gradle:9.3.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -19,7 +19,7 @@ buildscript {
 rootProject.allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
         maven {
             url "https://s3.us-east-2.amazonaws.com/android.telematics.sdk.production/"
         }
@@ -29,7 +29,7 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 36
+    compileSdkVersion 37
     namespace "com.telematicssdk"
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'

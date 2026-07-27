@@ -8,8 +8,9 @@ import android.content.Intent
 import androidx.annotation.NonNull
 import com.telematicssdk.tracking.TrackingApi
 import com.telematicssdk.tracking.model.track.TrackingMode
-import com.telematicssdk.tracking.utils.permissions.PermissionsWizardActivity
 import com.telematicssdk.tracking.model.realtime.configuration.AccidentDetectionSensitivity
+import com.telematicssdk.tracking.utils.permissions.TrackingPermissionsWizardActivity
+import com.telematicssdk.tracking.utils.permissions.TrackingPermissionsWizardThemeMode
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -103,6 +104,13 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
             "getUnsentTripCount" -> getUnsentTripCount(result)
             "sendCustomHeartbeats" -> sendCustomHeartbeats(call, result)
             "showPermissionWizard" -> showPermissionWizard(call, result)
+            "setProperties" -> setProperties(call, result)
+            "getProperties" -> getProperties(result)
+            "clearProperties" -> clearProperties(result)
+            "setSubUnits" -> setSubUnits(call, result)
+            "getSubUnits" -> getSubUnits(result)
+            "clearSubUnits" -> clearSubUnits(result)
+            "addActivityLog" -> addActivityLog(call, result)
             "getFutureTrackTags" -> getFutureTrackTags(result)
             "addFutureTrackTag" -> addFutureTrackTag(call, result)
             "removeFutureTrackTag" -> removeFutureTrackTag(call, result)
@@ -119,16 +127,17 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        if (requestCode == PermissionsWizardActivity.WIZARD_PERMISSIONS_CODE) {
+        if (requestCode == TrackingPermissionsWizardActivity.WIZARD_PERMISSIONS_CODE) {
             lateinit var wizardResult: String
 
             when (resultCode) {
-                PermissionsWizardActivity.WIZARD_RESULT_ALL_GRANTED -> wizardResult =
+                TrackingPermissionsWizardActivity.WIZARD_RESULT_ALL_GRANTED -> wizardResult =
                     WizardConstants.allGranted
-                PermissionsWizardActivity.WIZARD_RESULT_NOT_ALL_GRANTED -> wizardResult =
+                TrackingPermissionsWizardActivity.WIZARD_RESULT_NOT_ALL_GRANTED -> wizardResult =
                     WizardConstants.notAllGranted
-                PermissionsWizardActivity.WIZARD_RESULT_CANCELED -> wizardResult =
+                TrackingPermissionsWizardActivity.WIZARD_RESULT_CANCELED -> wizardResult =
                     WizardConstants.canceled
+                else -> return false
             }
 
             channel.invokeMethod("onPermissionWizardResult", wizardResult)
@@ -312,20 +321,93 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
     }
 
     private fun showPermissionWizard(call: MethodCall, result: Result) {
-        val enableAggressivePermissionsWizard =
-            call.argument<Boolean?>("enableAggressivePermissionsWizard") as Boolean
-        val enableAggressivePermissionsWizardPage =
-            call.argument<Boolean?>("enableAggressivePermissionsWizardPage") as Boolean
+        val themeMode = when (call.argument<String>("themeMode")) {
+            "light" -> TrackingPermissionsWizardThemeMode.Light
+            "dark" -> TrackingPermissionsWizardThemeMode.Dark
+            else -> TrackingPermissionsWizardThemeMode.System
+        }
+        val blockEarlyExit = call.argument<Boolean>("blockEarlyExit") ?: false
+        val skipWizardPages = call.argument<Boolean>("skipWizardPages") ?: false
 
         activity.startActivityForResult(
-            PermissionsWizardActivity.getStartWizardIntent(
+            TrackingPermissionsWizardActivity.getStartWizardIntent(
                 context,
-                enableAggressivePermissionsWizard = enableAggressivePermissionsWizard,
-                enableAggressivePermissionsWizardPage = enableAggressivePermissionsWizardPage,
-            ), PermissionsWizardActivity.WIZARD_PERMISSIONS_CODE
+                themeMode = themeMode,
+                blockEarlyExit = blockEarlyExit,
+                skipWizardPages = skipWizardPages,
+            ), TrackingPermissionsWizardActivity.WIZARD_PERMISSIONS_CODE
         )
 
         result.success(null)
+    }
+
+    private fun setProperties(call: MethodCall, result: Result) {
+        val properties = stringMapArgument(call, "properties", result) ?: return
+        api.setProperties(properties)
+        result.success(null)
+    }
+
+    private fun getProperties(result: Result) {
+        result.success(api.getProperties())
+    }
+
+    private fun clearProperties(result: Result) {
+        api.clearProperties()
+        result.success(null)
+    }
+
+    private fun setSubUnits(call: MethodCall, result: Result) {
+        val subUnits = stringMapArgument(call, "subUnits", result) ?: return
+        api.setSubUnits(subUnits)
+        result.success(null)
+    }
+
+    private fun getSubUnits(result: Result) {
+        result.success(api.getSubUnits())
+    }
+
+    private fun clearSubUnits(result: Result) {
+        api.clearSubUnits()
+        result.success(null)
+    }
+
+    private fun addActivityLog(call: MethodCall, result: Result) {
+        val text = call.argument<String>("text")
+        if (text == null) {
+            result.error("INVALID_ARGUMENT", "text is required", null)
+            return
+        }
+        val data = stringMapArgument(call, "data", result) ?: return
+
+        api.addActivityLog(text, data)
+        result.success(null)
+    }
+
+    private fun stringMapArgument(
+        call: MethodCall,
+        argument: String,
+        result: Result,
+    ): Map<String, String>? {
+        val rawMap = call.argument<Map<*, *>>(argument)
+        if (rawMap == null) {
+            result.error("INVALID_ARGUMENT", "$argument is required", null)
+            return null
+        }
+
+        val stringMap = LinkedHashMap<String, String>(rawMap.size)
+        for ((key, value) in rawMap) {
+            if (key !is String || value !is String) {
+                result.error(
+                    "INVALID_ARGUMENT",
+                    "$argument must contain only string keys and values",
+                    null,
+                )
+                return null
+            }
+            stringMap[key] = value
+        }
+
+        return stringMap
     }
 
     private fun getFutureTrackTags(result: Result) {

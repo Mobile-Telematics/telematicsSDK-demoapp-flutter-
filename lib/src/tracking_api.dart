@@ -6,7 +6,10 @@ import 'package:telematics_sdk/src/data/accident_detection_sensitivity.dart';
 import 'package:telematics_sdk/src/data/api_language.dart';
 import 'package:telematics_sdk/src/data/future_track_tag_result.dart';
 import 'package:telematics_sdk/src/data/tracking_mode.dart';
+import 'package:telematics_sdk/src/data/models/android_permission_wizard_options.dart';
 import 'package:telematics_sdk/src/data/models/device_id_registration_state.dart';
+import 'package:telematics_sdk/src/data/models/ios_missing_permissions_alert_configuration.dart';
+import 'package:telematics_sdk/src/data/models/ios_permission_wizard_configuration.dart';
 import 'package:telematics_sdk/src/data/models/permission_wizard_result.dart';
 import 'package:telematics_sdk/src/data/models/speed_violation.dart';
 import 'package:telematics_sdk/src/data/models/track_location.dart';
@@ -74,18 +77,30 @@ class TrackingApi {
   Stream<SpeedViolation> get speedViolation => _handler.speedViolation;
 
   /// Emits the native SDK result for [addFutureTrackTag].
+  @Deprecated(
+    'Future Track Tags are deprecated on iOS and Android. Use Properties APIs instead.',
+  )
   Stream<FutureTrackTagAddResult> get futureTrackTagAdded =>
       _handler.futureTrackTagAdded;
 
   /// Emits the native SDK result for [removeFutureTrackTag].
+  @Deprecated(
+    'Future Track Tags are deprecated on iOS and Android. Use Properties APIs instead.',
+  )
   Stream<FutureTrackTagRemoveResult> get futureTrackTagRemoved =>
       _handler.futureTrackTagRemoved;
 
   /// Emits the native SDK result for [removeAllFutureTrackTags].
+  @Deprecated(
+    'Future Track Tags are deprecated on iOS and Android. Use Properties APIs instead.',
+  )
   Stream<FutureTrackTagsRemoveResult> get allFutureTrackTagsRemoved =>
       _handler.allFutureTrackTagsRemoved;
 
   /// Emits the native SDK result for [getFutureTrackTags].
+  @Deprecated(
+    'Future Track Tags are deprecated on iOS and Android. Use Properties APIs instead.',
+  )
   Stream<FutureTrackTagsResult> get futureTrackTagsReceived =>
       _handler.futureTrackTagsReceived;
 
@@ -217,22 +232,113 @@ class TrackingApi {
   }
 
   /// Shows the native permissions wizard UI.
-  /// - Parameter enableAggressivePermissionsWizard: If `true`, the wizard finishes only
-  ///   when all required permissions are granted.
-  /// - Parameter enableAggressivePermissionsWizardPage: If `true`, the wizard auto-advances
-  ///   when permissions are granted on the current page.
+  ///
+  /// On Android, [android] configures the Android 4.1+ wizard. On iOS, call
+  /// [configureIosPermissionWizard] and related iOS-specific methods before
+  /// launching the wizard. The returned [Future] only confirms that the wizard
+  /// was launched; listen to [onPermissionWizardClose] for its final result.
   Future<void> showPermissionWizard({
-    required bool enableAggressivePermissionsWizard,
-    required bool enableAggressivePermissionsWizardPage,
-  }) => _channel.invokeMethod('showPermissionWizard', {
-    'enableAggressivePermissionsWizard': enableAggressivePermissionsWizard,
-    'enableAggressivePermissionsWizardPage':
-        enableAggressivePermissionsWizardPage,
-  });
+    AndroidPermissionWizardOptions? android,
+  }) => _channel.invokeMethod(
+    'showPermissionWizard',
+    Platform.isAndroid
+        ? (android ?? const AndroidPermissionWizardOptions()).toMap()
+        : null,
+  );
+
+  /// Configures the iOS permissions wizard.
+  ///
+  /// Omitted values retain Telematics iOS SDK defaults. Throws
+  /// [UnsupportedError] outside iOS.
+  Future<void> configureIosPermissionWizard(
+    IosPermissionWizardConfiguration configuration,
+  ) {
+    _ensureIOS();
+    return _channel.invokeMethod(
+      'configureIosPermissionWizard',
+      configuration.toMap(),
+    );
+  }
+
+  /// Configures the iOS alert shown when permissions are still missing.
+  ///
+  /// Omitted values retain Telematics iOS SDK defaults. Throws
+  /// [UnsupportedError] outside iOS.
+  Future<void> configureIosMissingPermissionsAlert(
+    IosMissingPermissionsAlertConfiguration configuration,
+  ) {
+    _ensureIOS();
+    return _channel.invokeMethod(
+      'configureIosMissingPermissionsAlert',
+      configuration.toMap(),
+    );
+  }
+
+  /// Enables or disables the iOS missing-permissions alert.
+  ///
+  /// Throws [UnsupportedError] outside iOS.
+  Future<void> setIosMissingPermissionsAlertEnabled(bool enabled) {
+    _ensureIOS();
+    return _channel.invokeMethod('setIosMissingPermissionsAlertEnabled', {
+      'enabled': enabled,
+    });
+  }
+
+  /// Replaces the SDK properties associated with the current device.
+  ///
+  /// Properties are string key-value pairs. This replaces the entire previous
+  /// dictionary; it does not merge individual keys.
+  Future<void> setProperties({required Map<String, String> properties}) {
+    return _channel.invokeMethod('setProperties', {'properties': properties});
+  }
+
+  /// Returns the SDK properties associated with the current device.
+  Future<Map<String, String>> getProperties() async {
+    final properties = await _channel.invokeMapMethod<String, String>(
+      'getProperties',
+    );
+    return Map<String, String>.from(properties ?? const {});
+  }
+
+  /// Removes all SDK properties associated with the current device.
+  Future<void> clearProperties() => _channel.invokeMethod('clearProperties');
+
+  /// Replaces the SDK sub-units associated with the current device.
+  ///
+  /// Sub-units are string key-value pairs. This replaces the entire previous
+  /// dictionary; it does not merge individual keys.
+  Future<void> setSubUnits({required Map<String, String> subUnits}) {
+    return _channel.invokeMethod('setSubUnits', {'subUnits': subUnits});
+  }
+
+  /// Returns the SDK sub-units associated with the current device.
+  Future<Map<String, String>> getSubUnits() async {
+    final subUnits = await _channel.invokeMapMethod<String, String>(
+      'getSubUnits',
+    );
+    return Map<String, String>.from(subUnits ?? const {});
+  }
+
+  /// Removes all SDK sub-units associated with the current device.
+  Future<void> clearSubUnits() => _channel.invokeMethod('clearSubUnits');
+
+  /// Sends an SDK activity log entry with structured string metadata.
+  Future<void> addActivityLog({
+    required String text,
+    required Map<String, String> data,
+  }) {
+    return _channel.invokeMethod('addActivityLog', {
+      'text': text,
+      'data': data,
+    });
+  }
 
   /// Requests the current list of Future Track tags from the native SDK.
   ///
   /// Results are delivered via [futureTrackTagsReceived].
+  @Deprecated(
+    'Future Track Tags are deprecated on iOS and Android. Use Properties APIs instead.',
+  )
   Future<void> getFutureTrackTags() =>
       _channel.invokeMethod('getFutureTrackTags');
 
@@ -240,6 +346,9 @@ class TrackingApi {
   ///
   /// - Parameter tag: Tag identifier.
   /// - Parameter source: Optional arbitrary source string (e.g. feature/module name).
+  @Deprecated(
+    'Future Track Tags are deprecated on iOS and Android. Use Properties APIs instead.',
+  )
   Future<void> addFutureTrackTag({required String tag, String? source}) {
     return _channel.invokeMethod('addFutureTrackTag', {
       'tag': tag,
@@ -251,6 +360,9 @@ class TrackingApi {
   ///
   /// - Parameter tag: Tag identifier.
   /// - Parameter source: Optional arbitrary source string. Used by iOS and ignored by Android.
+  @Deprecated(
+    'Future Track Tags are deprecated on iOS and Android. Use Properties APIs instead.',
+  )
   Future<void> removeFutureTrackTag({required String tag, String? source}) {
     return _channel.invokeMethod('removeFutureTrackTag', {
       'tag': tag,
@@ -259,6 +371,9 @@ class TrackingApi {
   }
 
   /// Removes all Future Track tags.
+  @Deprecated(
+    'Future Track Tags are deprecated on iOS and Android. Use Properties APIs instead.',
+  )
   Future<void> removeAllFutureTrackTags() =>
       _channel.invokeMethod('removeAllFutureTrackTags');
 

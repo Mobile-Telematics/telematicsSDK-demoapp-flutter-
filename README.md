@@ -23,7 +23,7 @@ For commercial use, you need create a developer workspace in [DataHub](https://a
 
 ```yaml
 dependencies:
-  telematics_sdk: ^1.1.3
+  telematics_sdk: ^1.2.0
 ```
 
 Import it. Now in your Dart code, you can use:
@@ -66,6 +66,32 @@ add network permissions
 </manifest>
 ```
 
+#### Android Permission Wizard theme
+
+The Android SDK 4.1+ Permission Wizard is an `AppCompatActivity`. Declare the
+current wizard activity in the app manifest and assign it an AppCompat-based
+theme. This is required even when the wizard is started from Flutter:
+
+```xml
+<application>
+    <activity
+        android:name="com.telematicssdk.tracking.utils.permissions.TrackingPermissionsWizardActivity"
+        android:theme="@style/TelematicsPermissionsWizardTheme"
+        android:exported="false" />
+</application>
+```
+
+Create the theme in `android/app/src/main/res/values/styles.xml`:
+
+```xml
+<resources>
+    <style name="TelematicsPermissionsWizardTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:colorBackground">@android:color/white</item>
+    </style>
+</resources>
+```
+
 #### build.gradle
 
 add to file (module)/build.gradle props:
@@ -78,6 +104,10 @@ add to file (module)/build.gradle props:
                 minifyEnabled false
             }
         }
+    }
+
+    dependencies {
+        implementation "androidx.appcompat:appcompat:1.6.1"
     }
 ```
 
@@ -95,25 +125,20 @@ add to file (module)/build.gradle props:
 
 ```kotlin
 import com.telematicssdk.TelematicsSDKApp
+import com.telematicssdk.tracking.Settings
 
 class App: TelematicsSDKApp() {
-    
-    override fun onCreate() {
-        val api = TrackingApi.getInstance()
-        api.initialize(this, setTelematicsSettings())
-        super.onCreate()
-    }
-        
-    override fun setTelematicsSettings(): Settings {
-        val settings = Settings()
+    override fun setTelematicsSettings(): Settings =
+        Settings()
             .stopTrackingTimeout(Settings.stopTrackingTimeHigh)
             .accuracy(Settings.accuracyHigh)
             .autoStartOn(true)
             .passiveDetectionOn(true)
-        return settings
-    }
 }
 ```
+
+`TelematicsSDKApp` initializes `TrackingApi` itself; do not initialize it a
+second time in `onCreate`.
 
 2. add to tag __application__ of file ./app/src/main/AndroidManifest.xml this class __name__:
 
@@ -126,7 +151,7 @@ class App: TelematicsSDKApp() {
 3. add Telematics SDK repository into (module)/build.gradle
 ```groovy
 dependencies {
-    implementation "com.telematicssdk:tracking:4.0.0"
+    implementation "com.telematicssdk:tracking:4.1.0"
 }
 ```
 
@@ -361,7 +386,7 @@ final manualStatus = state.manualTrackingStatus;
 
 Sets the maximum duration for a single persistent tracking session, in minutes.
 Allowed values are from `5` to `600`. The native SDK default is `240` minutes
-(8 hours).
+(4 hours).
 ```dart
 await trackingApi.setMaxPersistentTrackingInterval(minutes: 240);
 ```
@@ -403,6 +428,31 @@ Accident detection sensitivity is normal by default. You can change sensitivity.
 ```dart
 await trackingApi.setAccidentDetectionSensitivity(sensitivity: AccidentDetectionSensitivity.normal);
 ```
+
+**Properties and sub-units**
+
+Properties and sub-units are string key-value pairs associated with the current SDK user. Each `set` call replaces the entire existing dictionary; it does not merge keys.
+
+```dart
+await trackingApi.setProperties(properties: {'policy': 'standard'});
+final properties = await trackingApi.getProperties();
+await trackingApi.clearProperties();
+
+await trackingApi.setSubUnits(subUnits: {'vehicle': 'fleet-42'});
+final subUnits = await trackingApi.getSubUnits();
+await trackingApi.clearSubUnits();
+```
+
+**Activity log**
+
+```dart
+await trackingApi.addActivityLog(
+  text: 'Trip started manually',
+  data: {'tripId': '42'},
+);
+```
+
+> **Deprecated:** Future Track Tags are deprecated on iOS and Android. They remain available for backwards compatibility; migrate new integrations to Properties APIs.
 
 **Create new tag**
 The detailed information about using Tags is available [here](https://docs.damoov.com/docs/ios-sdk-incoming-tags)
@@ -475,13 +525,65 @@ void onPermissionWizardResult(PermissionWizardResult result) {
 2. Request to show the permission wizard
 ```dart
 await trackingApi.showPermissionWizard(
-enableAggressivePermissionsWizard: false, 
-enableAggressivePermissionsWizardPage: true
+  android: const AndroidPermissionWizardOptions(
+    themeMode: AndroidPermissionWizardThemeMode.system,
+    blockEarlyExit: false,
+    skipWizardPages: false,
+  ),
 );
 ```
-If `[enableAggressivePermissionsWizard]` set to `true` the wizard will be finished if all required permissions granted (user can’t cancel it with back button), otherwise if set to `false` the wizard can be finished with not all granted permissions or cancelled with back button.
 
-If `[enableAggressivePermissionsWizardPage]` set to `true` the wizard will slide to next page if requested permissions granted on current page, otherwise if set to `false` the wizard can slide with not granted permissions.
+`blockEarlyExit` prevents closing the Android wizard before it ends. `skipWizardPages` skips the informational pages supported by Android SDK 4.1+.
+
+On iOS, configure the wizard before launching it. Any omitted property keeps the iOS SDK default:
+
+```dart
+await trackingApi.configureIosPermissionWizard(
+  const IosPermissionWizardConfiguration(
+    locationAlways: IosPermissionWizardPageConfiguration(
+      title: 'Location access',
+    ),
+  ),
+);
+
+await trackingApi.configureIosMissingPermissionsAlert(
+  const IosMissingPermissionsAlertConfiguration(isBlocking: true),
+);
+await trackingApi.setIosMissingPermissionsAlertEnabled(true);
+await trackingApi.showPermissionWizard();
+```
+
+`IosPermissionWizardConfiguration` accepts optional `locationWhenInUse`,
+`locationAlways`, and `motion` page configurations; each supports `title`,
+`body`, `primaryButtonTitle`, `hintLead`, and `permissionHint`. Its `status`
+configuration supports the status-screen copy, and `lightTheme` / `darkTheme`
+configure the visual theme.
+
+The status-screen and missing-permissions-alert copy fields are `title`,
+`body`, `locationTitle`, `motionTitle`, `locationEnabledText`,
+`locationAlwaysRequiredText`, `locationPreciseRequiredText`,
+`locationActionNeededText`, `motionEnabledText`, `motionActionNeededText`,
+`fixInSettingsButtonTitle`, and `skipButtonTitle`.
+
+`IosMissingPermissionsAlertConfiguration` supports the same status copy and
+themes, plus `isBlocking`. `setIosMissingPermissionsAlertEnabled` controls
+whether this alert is shown.
+
+For iOS theme colors, use `#RRGGBB` or `#AARRGGBB`, for example:
+
+```dart
+const IosPermissionWizardTheme(
+  primaryElementColor: '#2563EB',
+  backgroundColor: '#FFFFFFFF',
+)
+```
+
+The available theme fields are `backgroundColor`, `gradientStartColor`,
+`gradientEndColor`, `titleTextColor`, `bodyTextColor`, `primaryElementColor`,
+`secondaryElementColor`, `buttonTextColor`, `cardBackgroundColor`,
+`successElementColor`, `warningElementColor`, `secondaryButtonTextColor`,
+`secondaryButtonBackgroundColor`, `statusIndicatorTextColor`, and
+`modalScrimColor`.
 
 
 ### Available Methods (iOS only)
