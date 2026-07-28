@@ -92,6 +92,12 @@ Create the theme in `android/app/src/main/res/values/styles.xml`:
 </resources>
 ```
 
+The wizard's notification and UI strings, images, colors, and dimensions can be
+overridden through standard Android resources in the host app. Refer to
+[Android App Resources](https://docs.damoov.com/docs/android-app-resources)
+for the complete and current list of resource names instead of copying them
+into the app manifest or this README.
+
 #### build.gradle
 
 add to file (module)/build.gradle props:
@@ -429,28 +435,115 @@ Accident detection sensitivity is normal by default. You can change sensitivity.
 await trackingApi.setAccidentDetectionSensitivity(sensitivity: AccidentDetectionSensitivity.normal);
 ```
 
-**Properties and sub-units**
+### Trip metadata
 
-Properties and sub-units are string key-value pairs associated with the current SDK user. Each `set` call replaces the entire existing dictionary; it does not merge keys.
+Use trip metadata to associate trips with business entities such as an order,
+driver, vehicle, or shift. These APIs add business context to trip data; they do
+not replace the SDK's telematics measurements.
+
+#### Properties
+
+Properties are a persistent, flat string key-value dictionary attached to
+trips. They remain active for subsequent trips until they are replaced or
+cleared, and are cleared automatically when the user logs out or the device ID
+changes.
+
+`setProperties` replaces the whole dictionary; it does not merge keys. When
+tracking is active and the new dictionary differs from the current one, the SDK
+finishes the current trip and starts a new trip with the new Properties. Passing
+the same dictionary does not restart tracking.
 
 ```dart
-await trackingApi.setProperties(properties: {'policy': 'standard'});
+await trackingApi.setProperties(
+  properties: {
+    'policy_id': 'POL-1042',
+    'shift_id': '2026-07-28-AM',
+    'order_id': 'ORD-891',
+  },
+);
+
 final properties = await trackingApi.getProperties();
 await trackingApi.clearProperties();
+```
 
-await trackingApi.setSubUnits(subUnits: {'vehicle': 'fleet-42'});
+Use `getProperties()` to inspect the active metadata or to update one entry
+before writing the complete replacement dictionary:
+
+```dart
+final properties = await trackingApi.getProperties();
+await trackingApi.setProperties(
+  properties: {...properties, 'order_id': 'ORD-892'},
+);
+```
+
+`clearProperties()` removes all Properties. If tracking is active and Properties
+are not already empty, the SDK finishes the current trip and starts a new trip
+without Properties. A Properties dictionary must contain 1–20 entries; keys and
+values must be non-empty strings of at most 255 characters. Use
+`clearProperties()`—not an empty map—to remove all Properties.
+
+#### Sub-units
+
+Sub-units are a persistent, flat string key-value dictionary for analytical
+trip classification, such as a driver, vehicle, depot, or session. They remain
+active until they are replaced or cleared, and are cleared automatically on
+logout or when the device ID changes.
+
+Changing or clearing Sub-units never restarts active tracking. If changed while
+a trip is active, the new Sub-units apply to the next trip.
+
+```dart
+await trackingApi.setSubUnits(
+  subUnits: {
+    'driver_id': 'DRV-42',
+    'vehicle_id': 'VEH-108',
+    'depot_id': 'MINSK-01',
+  },
+);
+
 final subUnits = await trackingApi.getSubUnits();
 await trackingApi.clearSubUnits();
 ```
 
-**Activity log**
+`setSubUnits()` replaces the full dictionary. Use `getSubUnits()` to inspect the
+active dictionary or update one entry before writing the full replacement map.
+`clearSubUnits()` removes all Sub-units without restarting tracking. A Sub-units
+dictionary must contain 1–5 entries; its keys and values must be non-empty
+strings of at most 255 characters. Use `clearSubUnits()`—not an empty map—to
+remove all Sub-units.
+
+#### Activity log
+
+Use Activity Log to attach business events to the current active trip without
+stopping or splitting it—for example, delivery acceptance, a checkpoint, or a
+depot arrival. Activity Log entries can be added only while tracking is active;
+each trip supports up to 100 entries.
 
 ```dart
 await trackingApi.addActivityLog(
-  text: 'Trip started manually',
-  data: {'tripId': '42'},
+  text: 'Driver accepted delivery order',
+  data: {
+    'order_id': 'ORD-891',
+    'vehicle_id': 'VEH-108',
+    'source': 'delivery-flow',
+  },
 );
 ```
+
+`text` is required and is limited to 1,000 characters. The `data` dictionary is
+optional; because the Flutter method requires the argument, pass an empty map
+when no additional metadata is needed:
+
+```dart
+await trackingApi.addActivityLog(
+  text: 'Arrived at depot',
+  data: const {},
+);
+```
+
+When Properties change during tracking, the SDK completes the current trip and
+starts a new one. Existing Activity Log entries remain attached to the completed
+trip; the new trip starts with an empty Activity Log.
 
 > **Deprecated:** Future Track Tags are deprecated on iOS and Android. They remain available for backwards compatibility; migrate new integrations to Properties APIs.
 
@@ -498,31 +591,55 @@ final tagsReceivedSubscription = trackingApi.futureTrackTagsReceived.listen((res
 await trackingApi.getFutureTrackTags();
 ```
 
-**Setting up the permission wizard**
-Without these permissions SDK can not be enabled.
-If you want to use your own way to request permissions, you can skip this part.
+### Permission Wizard
 
-To show the permission wizard, follow next steps:
-1. Create and init **StreamSubscription** in your widget
+The native Permission Wizard explains each required permission before opening
+the corresponding system prompt. You may implement your own request flow, but
+do not enable the SDK until
+`isAllRequiredPermissionsAndSensorsGranted()` returns `true`.
+
+Subscribe once, before displaying the wizard. `showPermissionWizard` resolves
+when the native UI is launched—not when the user has finished—so use
+`onPermissionWizardClose` as the completion signal and cancel the subscription
+in `dispose`.
+
 ```dart
-late StreamSubscription<PermissionWizardResult?> _onPermissionWizardStateChanged;
-    
+late final StreamSubscription<PermissionWizardResult?> wizardSubscription;
+
 @override
 void initState() {
-  onPermissionWizardStateChanged = trackingApi
-      .onPermissionWizardClose
-      .listen(_onPermissionWizardResult);
+  super.initState();
+  wizardSubscription = trackingApi.onPermissionWizardClose.listen((result) async {
+    if (result == PermissionWizardResult.allGranted) {
+      await trackingApi.setEnableSdk(enable: true);
+      return;
+    }
+
+    // Keep the SDK disabled and offer an appropriate retry path.
+  });
 }
-        
-void onPermissionWizardResult(PermissionWizardResult result) {
-  if (result == PermissionWizardResult.allGranted) {
-    //All permissions are granted. To do something here.
-  } else {
-    //Permissions are not granted. To do something here.
-  }
+
+@override
+void dispose() {
+  wizardSubscription.cancel();
+  super.dispose();
 }
 ```
-2. Request to show the permission wizard
+
+#### Android
+
+The Android wizard requests the runtime permissions required for tracking:
+precise location, background location on Android 10+, activity recognition on
+Android 10+, and battery-optimization exclusion. Check the merged manifest
+after adding or upgrading dependencies: another dependency must not remove or
+restrict the SDK permissions. See the
+[Android SDK integration guide](https://docs.damoov.com/docs/android-sdk-integration)
+for the native integration prerequisites.
+
+The `TrackingPermissionsWizardActivity` declaration and its AppCompat theme in
+the [Android setup](#android-permission-wizard-theme) section are required for
+Android SDK 4.1+. Then launch it from Flutter:
+
 ```dart
 await trackingApi.showPermissionWizard(
   android: const AndroidPermissionWizardOptions(
@@ -533,60 +650,122 @@ await trackingApi.showPermissionWizard(
 );
 ```
 
-`blockEarlyExit` prevents closing the Android wizard before it ends. `skipWizardPages` skips the informational pages supported by Android SDK 4.1+.
+`themeMode` selects the light, dark, or system appearance. Set
+`blockEarlyExit` to `true` only when the product flow must keep the user in the
+wizard until it reaches an outcome; the default `false` permits closing it.
+`skipWizardPages` removes the Android SDK 4.1+ explanatory screens and proceeds
+directly to the system requests where supported. Keep it `false` for the usual
+step-by-step, policy-friendly explanation.
 
-On iOS, configure the wizard before launching it. Any omitted property keeps the iOS SDK default:
+The stream result is one of:
+
+| Result | Meaning | Recommended handling |
+| --- | --- | --- |
+| `allGranted` | All required permissions and sensors are ready. | Enable the SDK after ensuring a device ID has been set. |
+| `notAllGranted` | The flow finished, but one or more requirements remain unavailable. | Keep the SDK disabled; explain the missing requirement and let the user retry. |
+| `canceled` | The user closed the wizard. | Keep the SDK disabled and provide a non-blocking route to reopen it later. |
+
+To customize Android wizard copy, illustration assets, colors, or dimensions,
+override the host application's Android resources. The maintained list is in
+[Android App Resources](https://docs.damoov.com/docs/android-app-resources);
+using that page avoids stale duplicated resource keys here.
+
+
+### Available Methods (iOS only)
+
+#### Permission Wizard configuration
+
+On iOS, the wizard guides the user through **When In Use** location, **Always**
+location, and **Motion & Fitness** permissions, then shows their final status.
+Always location, Precise Location, and Motion & Fitness are required for
+reliable automatic trip detection. Configure the wizard before calling
+`showPermissionWizard()`. These configuration APIs are iOS-only and throw
+`UnsupportedError` on Android.
+
+Every configuration object is partial: omitted text and color fields retain the
+native iOS SDK defaults. This makes it safe to customize only the copy or colors
+needed by your product while keeping the SDK's current permission flow.
 
 ```dart
 await trackingApi.configureIosPermissionWizard(
   const IosPermissionWizardConfiguration(
-    locationAlways: IosPermissionWizardPageConfiguration(
+    locationWhenInUse: IosPermissionWizardPageConfiguration(
       title: 'Location access',
+      body: 'Allow location access so the app can recognize your trips.',
+      primaryButtonTitle: 'Continue',
+    ),
+    locationAlways: IosPermissionWizardPageConfiguration(
+      title: 'Always allow location',
+      body: 'Choose “Always” to record trips when the app is not open.',
+      primaryButtonTitle: 'Open settings',
+      hintLead: 'In Settings, select:',
+      permissionHint: 'Location → Always',
+    ),
+    motion: IosPermissionWizardPageConfiguration(
+      title: 'Motion & Fitness',
+      body: 'Motion data helps detect trips and calculate driving events.',
+      primaryButtonTitle: 'Allow motion access',
+    ),
+    status: IosPermissionWizardStatusConfiguration(
+      title: 'Finish setup',
+      body: 'Review the permissions needed to record trips.',
+      fixInSettingsButtonTitle: 'Open Settings',
+      skipButtonTitle: 'Not now',
+    ),
+    lightTheme: IosPermissionWizardTheme(
+      backgroundColor: '#FFFFFFFF',
+      primaryElementColor: '#2563EB',
+      buttonTextColor: '#FFFFFFFF',
+    ),
+    darkTheme: IosPermissionWizardTheme(
+      backgroundColor: '#FF111827',
+      primaryElementColor: '#60A5FA',
+      buttonTextColor: '#FF111827',
     ),
   ),
 );
 
-await trackingApi.configureIosMissingPermissionsAlert(
-  const IosMissingPermissionsAlertConfiguration(isBlocking: true),
-);
-await trackingApi.setIosMissingPermissionsAlertEnabled(true);
 await trackingApi.showPermissionWizard();
 ```
 
-`IosPermissionWizardConfiguration` accepts optional `locationWhenInUse`,
-`locationAlways`, and `motion` page configurations; each supports `title`,
-`body`, `primaryButtonTitle`, `hintLead`, and `permissionHint`. Its `status`
-configuration supports the status-screen copy, and `lightTheme` / `darkTheme`
-configure the visual theme.
+`IosPermissionWizardPageConfiguration` customizes a permission page with
+`title`, `body`, `primaryButtonTitle`, `hintLead`, and `permissionHint`.
+`IosPermissionWizardStatusConfiguration` customizes the final status screen,
+including per-permission titles and messages for enabled, missing Always,
+missing Precise Location, and missing Motion & Fitness access. Use
+`fixInSettingsButtonTitle` and `skipButtonTitle` to label its actions.
 
-The status-screen and missing-permissions-alert copy fields are `title`,
-`body`, `locationTitle`, `motionTitle`, `locationEnabledText`,
-`locationAlwaysRequiredText`, `locationPreciseRequiredText`,
-`locationActionNeededText`, `motionEnabledText`, `motionActionNeededText`,
-`fixInSettingsButtonTitle`, and `skipButtonTitle`.
+`IosPermissionWizardTheme` can be supplied independently for `lightTheme` and
+`darkTheme`. Its color fields use `#RRGGBB` or `#AARRGGBB`; the latter includes
+the alpha channel. In addition to the colors above, it supports text, gradient,
+card, success, warning, secondary-button, status-indicator, and modal-scrim
+colors. See the [iOS Permission Wizard guide](https://docs.damoov.com/docs/new-permission-wizard-in-ios)
+for the native wizard behavior and UX guidance.
 
-`IosMissingPermissionsAlertConfiguration` supports the same status copy and
-themes, plus `isBlocking`. `setIosMissingPermissionsAlertEnabled` controls
-whether this alert is shown.
+#### Missing-permissions alert
 
-For iOS theme colors, use `#RRGGBB` or `#AARRGGBB`, for example:
+Use the optional missing-permissions alert when the user returns to the app
+without completing the wizard or later revokes a permission. It has the same
+status copy and light/dark theme options as the wizard. Set `isBlocking` only
+if your product must require remediation before the alert can be dismissed.
 
 ```dart
-const IosPermissionWizardTheme(
-  primaryElementColor: '#2563EB',
-  backgroundColor: '#FFFFFFFF',
-)
+await trackingApi.configureIosMissingPermissionsAlert(
+  const IosMissingPermissionsAlertConfiguration(
+    title: 'Trip recording needs attention',
+    body: 'Enable the required permissions in Settings to continue.',
+    fixInSettingsButtonTitle: 'Open Settings',
+    skipButtonTitle: 'Later',
+    isBlocking: false,
+  ),
+);
+
+await trackingApi.setIosMissingPermissionsAlertEnabled(true);
 ```
 
-The available theme fields are `backgroundColor`, `gradientStartColor`,
-`gradientEndColor`, `titleTextColor`, `bodyTextColor`, `primaryElementColor`,
-`secondaryElementColor`, `buttonTextColor`, `cardBackgroundColor`,
-`successElementColor`, `warningElementColor`, `secondaryButtonTextColor`,
-`secondaryButtonBackgroundColor`, `statusIndicatorTextColor`, and
-`modalScrimColor`.
-
-
-### Available Methods (iOS only)
+Call `setIosMissingPermissionsAlertEnabled(false)` when your app uses its own
+remediation UI. The alert configuration and enablement should be applied before
+the part of the app that may show the wizard or evaluate missing permissions.
 
 **Get API language**
 ```dart
@@ -615,6 +794,10 @@ await trackingApi.requestIOSLocationAlwaysPermission();
 ```dart
 await trackingApi.requestIOSMotionPermission();
 ```
+
+Use these direct request methods only for a custom iOS permission flow. For the
+SDK wizard, call `showPermissionWizard()` after configuring it as described
+above; do not request the same permission twice in parallel.
 
 **Listen for wrong accuracy events**
 ```dart

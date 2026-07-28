@@ -284,15 +284,29 @@ class TrackingApi {
     });
   }
 
-  /// Replaces the SDK properties associated with the current device.
+  /// Replaces the persistent Properties dictionary attached to trips.
   ///
-  /// Properties are string key-value pairs. This replaces the entire previous
-  /// dictionary; it does not merge individual keys.
+  /// Use Properties to associate trips with business entities such as an order,
+  /// driver, vehicle, or shift. The supplied map completely replaces the
+  /// previous dictionary; it does not merge individual keys.
+  ///
+  /// If tracking is active and [properties] differs from the current map, the
+  /// SDK completes the current trip and starts a new trip with the updated
+  /// Properties. Passing the same map does not restart tracking. Properties
+  /// persist for subsequent trips until replaced or cleared, and are cleared on
+  /// logout or when the device ID changes.
+  ///
+  /// The map must contain from 1 to 20 non-empty entries. Keys and values must
+  /// be non-empty and no longer than 255 characters. Use [clearProperties] to
+  /// remove all Properties instead of passing an empty map.
   Future<void> setProperties({required Map<String, String> properties}) {
     return _channel.invokeMethod('setProperties', {'properties': properties});
   }
 
-  /// Returns the SDK properties associated with the current device.
+  /// Returns the current persistent Properties dictionary.
+  ///
+  /// Use this to inspect active trip metadata or to change a single entry before
+  /// supplying the complete replacement map to [setProperties].
   Future<Map<String, String>> getProperties() async {
     final properties = await _channel.invokeMapMethod<String, String>(
       'getProperties',
@@ -300,18 +314,34 @@ class TrackingApi {
     return Map<String, String>.from(properties ?? const {});
   }
 
-  /// Removes all SDK properties associated with the current device.
+  /// Removes all persistent Properties.
+  ///
+  /// If tracking is active and Properties are not already empty, the SDK
+  /// completes the current trip and starts a new trip without Properties.
   Future<void> clearProperties() => _channel.invokeMethod('clearProperties');
 
-  /// Replaces the SDK sub-units associated with the current device.
+  /// Replaces the persistent Sub-units dictionary used for trip classification.
   ///
-  /// Sub-units are string key-value pairs. This replaces the entire previous
-  /// dictionary; it does not merge individual keys.
+  /// Use Sub-units for analytical dimensions such as a driver, vehicle, depot,
+  /// or session. The supplied map completely replaces the previous dictionary;
+  /// it does not merge individual keys.
+  ///
+  /// Setting Sub-units never restarts active tracking. If tracking is active,
+  /// the updated Sub-units are applied to the next trip. They persist until
+  /// replaced or cleared, and are cleared on logout or when the device ID
+  /// changes.
+  ///
+  /// The map must contain from 1 to 5 non-empty entries. Keys and values must
+  /// be non-empty and no longer than 255 characters. Use [clearSubUnits] to
+  /// remove all Sub-units instead of passing an empty map.
   Future<void> setSubUnits({required Map<String, String> subUnits}) {
     return _channel.invokeMethod('setSubUnits', {'subUnits': subUnits});
   }
 
-  /// Returns the SDK sub-units associated with the current device.
+  /// Returns the current persistent Sub-units dictionary.
+  ///
+  /// Use this to inspect active classification metadata or to change one entry
+  /// before supplying the complete replacement map to [setSubUnits].
   Future<Map<String, String>> getSubUnits() async {
     final subUnits = await _channel.invokeMapMethod<String, String>(
       'getSubUnits',
@@ -319,10 +349,23 @@ class TrackingApi {
     return Map<String, String>.from(subUnits ?? const {});
   }
 
-  /// Removes all SDK sub-units associated with the current device.
+  /// Removes all persistent Sub-units without restarting active tracking.
+  ///
+  /// When tracking is active, the cleared value is applied to the next trip.
   Future<void> clearSubUnits() => _channel.invokeMethod('clearSubUnits');
 
-  /// Sends an SDK activity log entry with structured string metadata.
+  /// Attaches a business event to the current active trip.
+  ///
+  /// Activity Log is useful for events such as a delivery, checkpoint, or depot
+  /// arrival. It does not stop or split tracking, but entries can be added only
+  /// while tracking is active. Each trip supports up to 100 entries.
+  ///
+  /// [text] is required and is limited to 1,000 characters. [data] is optional
+  /// structured metadata; pass an empty map when there is no additional data.
+  ///
+  /// If Properties change during tracking, the SDK completes the current trip.
+  /// Existing Activity Log entries remain attached to that completed trip, and
+  /// the new trip begins with an empty Activity Log.
   Future<void> addActivityLog({
     required String text,
     required Map<String, String> data,
