@@ -343,8 +343,13 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
     private fun setProperties(call: MethodCall, result: Result) {
         val properties = stringMapArgument(call, "properties", result) ?: return
-        api.setProperties(properties)
-        result.success(null)
+
+        try {
+            api.setProperties(properties)
+            result.success(null)
+        } catch (e: Exception) {
+            resultSdkError(result, e)
+        }
     }
 
     private fun getProperties(result: Result) {
@@ -358,8 +363,13 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
 
     private fun setSubUnits(call: MethodCall, result: Result) {
         val subUnits = stringMapArgument(call, "subUnits", result) ?: return
-        api.setSubUnits(subUnits)
-        result.success(null)
+
+        try {
+            api.setSubUnits(subUnits)
+            result.success(null)
+        } catch (e: Exception) {
+            resultSdkError(result, e)
+        }
     }
 
     private fun getSubUnits(result: Result) {
@@ -379,8 +389,20 @@ class TelematicsSDKPlugin : ActivityAware, ActivityResultListener, FlutterPlugin
         }
         val data = stringMapArgument(call, "data", result) ?: return
 
-        api.addActivityLog(text, data)
-        result.success(null)
+        try {
+            api.addActivityLog(text, data)
+            result.success(null)
+        } catch (e: Exception) {
+            resultSdkError(result, e)
+        }
+    }
+
+    private fun resultSdkError(result: Result, error: Exception) {
+        result.error(
+            "TELEMATICS_SDK_FAILURE",
+            error.message ?: error.javaClass.simpleName,
+            null,
+        )
     }
 
     private fun stringMapArgument(
