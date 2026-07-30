@@ -1,4 +1,7 @@
+export 'package:telematics_sdk/src/data/models/android_permission_wizard_options.dart';
 export 'package:telematics_sdk/src/data/models/device_id_registration_state.dart';
+export 'package:telematics_sdk/src/data/models/ios_missing_permissions_alert_configuration.dart';
+export 'package:telematics_sdk/src/data/models/ios_permission_wizard_configuration.dart';
 export 'package:telematics_sdk/src/data/models/permission_wizard_result.dart';
 export 'package:telematics_sdk/src/data/models/speed_violation.dart';
 export 'package:telematics_sdk/src/data/models/status.dart';

@@ -77,6 +77,26 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycle
             sendCustomHeartbeats(call, result: result)
         case "showPermissionWizard":
             showPermissionWizard(call, result)
+        case "configureIosPermissionWizard":
+            configureIosPermissionWizard(call, result)
+        case "configureIosMissingPermissionsAlert":
+            configureIosMissingPermissionsAlert(call, result)
+        case "setIosMissingPermissionsAlertEnabled":
+            setIosMissingPermissionsAlertEnabled(call, result)
+        case "setProperties":
+            setProperties(call, result)
+        case "getProperties":
+            getProperties(result)
+        case "clearProperties":
+            clearProperties(result)
+        case "setSubUnits":
+            setSubUnits(call, result)
+        case "getSubUnits":
+            getSubUnits(result)
+        case "clearSubUnits":
+            clearSubUnits(result)
+        case "addActivityLog":
+            addActivityLog(call, result)
         case "getFutureTrackTags":
             getFutureTrackTags(result)
         case "addFutureTrackTag":
@@ -339,11 +359,272 @@ public class TelematicsSDKPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycle
     }
     
     private func showPermissionWizard(_ call: FlutterMethodCall, _ result: @escaping FlutterReply) {
-        RPPermissionsWizard.returnInstance().launch(finish: { _ in
-            let wizardResult = RPEntry.instance.isAllRequiredPermissionsGranted() ? Constants.WizardResult.allGranted : Constants.WizardResult.notAllGranted
-            self.channel.invokeMethod("onPermissionWizardResult", arguments: wizardResult)
-        })
+        RPPermissionsWizard.instance.launch { [weak self] _ in
+            let wizardResult = RPEntry.instance.isAllRequiredPermissionsAndSensorsGranted() ? Constants.WizardResult.allGranted : Constants.WizardResult.notAllGranted
+            self?.channel.invokeMethod("onPermissionWizardResult", arguments: wizardResult)
+        }
         result(nil)
+    }
+
+    private func configureIosPermissionWizard(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        let values = dictionary(from: call.arguments)
+        let defaults = RPPermissionsWizardConfiguration.defaultConfiguration()
+        let configuration = RPPermissionsWizardConfiguration(
+            locationWhenInUse: wizardPage(
+                dictionary(from: values["locationWhenInUse"]),
+                fallback: defaults.locationWhenInUse
+            ),
+            locationAlways: wizardPage(
+                dictionary(from: values["locationAlways"]),
+                fallback: defaults.locationAlways
+            ),
+            motion: wizardPage(dictionary(from: values["motion"]), fallback: defaults.motion),
+            status: wizardStatus(dictionary(from: values["status"]), fallback: defaults.status),
+            lightTheme: wizardTheme(dictionary(from: values["lightTheme"]), fallback: defaults.lightTheme),
+            darkTheme: wizardTheme(dictionary(from: values["darkTheme"]), fallback: defaults.darkTheme)
+        )
+
+        RPPermissionsWizard.instance.configure(configuration)
+        result(nil)
+    }
+
+    private func configureIosMissingPermissionsAlert(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        let values = dictionary(from: call.arguments)
+        let defaults = RPPermissionsWizardMissingPermissionsAlertConfiguration.defaultConfiguration()
+        let configuration = RPPermissionsWizardMissingPermissionsAlertConfiguration(
+            title: string(values, "title", fallback: defaults.title),
+            body: string(values, "body", fallback: defaults.body),
+            locationTitle: string(values, "locationTitle", fallback: defaults.locationTitle),
+            motionTitle: string(values, "motionTitle", fallback: defaults.motionTitle),
+            locationEnabledText: string(values, "locationEnabledText", fallback: defaults.locationEnabledText),
+            locationAlwaysRequiredText: string(values, "locationAlwaysRequiredText", fallback: defaults.locationAlwaysRequiredText),
+            locationPreciseRequiredText: string(values, "locationPreciseRequiredText", fallback: defaults.locationPreciseRequiredText),
+            locationActionNeededText: string(values, "locationActionNeededText", fallback: defaults.locationActionNeededText),
+            motionEnabledText: string(values, "motionEnabledText", fallback: defaults.motionEnabledText),
+            motionActionNeededText: string(values, "motionActionNeededText", fallback: defaults.motionActionNeededText),
+            fixInSettingsButtonTitle: string(values, "fixInSettingsButtonTitle", fallback: defaults.fixInSettingsButtonTitle),
+            isBlocking: bool(values, "isBlocking", fallback: defaults.isBlocking),
+            skipButtonTitle: string(values, "skipButtonTitle", fallback: defaults.skipButtonTitle),
+            lightTheme: wizardTheme(dictionary(from: values["lightTheme"]), fallback: defaults.lightTheme),
+            darkTheme: wizardTheme(dictionary(from: values["darkTheme"]), fallback: defaults.darkTheme)
+        )
+
+        RPPermissionsWizard.instance.configureMissingPermissionsAlert(configuration)
+        result(nil)
+    }
+
+    private func setIosMissingPermissionsAlertEnabled(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        let values = dictionary(from: call.arguments)
+        guard let enabled = values["enabled"] as? Bool else {
+            result(FlutterError(
+                code: FlutterPluginCode.failure,
+                message: "enabled is required",
+                details: nil
+            ))
+            return
+        }
+
+        RPPermissionsWizard.instance.setMissingPermissionsAlertEnabled(enabled)
+        result(nil)
+    }
+
+    private func wizardPage(
+        _ values: [String: Any],
+        fallback: RPPermissionsWizardPageConfiguration
+    ) -> RPPermissionsWizardPageConfiguration {
+        RPPermissionsWizardPageConfiguration(
+            title: string(values, "title", fallback: fallback.title),
+            body: string(values, "body", fallback: fallback.body),
+            primaryButtonTitle: string(values, "primaryButtonTitle", fallback: fallback.primaryButtonTitle),
+            hintLead: string(values, "hintLead", fallback: fallback.hintLead),
+            permissionHint: string(values, "permissionHint", fallback: fallback.permissionHint)
+        )
+    }
+
+    private func wizardStatus(
+        _ values: [String: Any],
+        fallback: RPPermissionsWizardStatusConfiguration
+    ) -> RPPermissionsWizardStatusConfiguration {
+        RPPermissionsWizardStatusConfiguration(
+            title: string(values, "title", fallback: fallback.title),
+            body: string(values, "body", fallback: fallback.body),
+            locationTitle: string(values, "locationTitle", fallback: fallback.locationTitle),
+            motionTitle: string(values, "motionTitle", fallback: fallback.motionTitle),
+            locationEnabledText: string(values, "locationEnabledText", fallback: fallback.locationEnabledText),
+            locationAlwaysRequiredText: string(values, "locationAlwaysRequiredText", fallback: fallback.locationAlwaysRequiredText),
+            locationPreciseRequiredText: string(values, "locationPreciseRequiredText", fallback: fallback.locationPreciseRequiredText),
+            locationActionNeededText: string(values, "locationActionNeededText", fallback: fallback.locationActionNeededText),
+            motionEnabledText: string(values, "motionEnabledText", fallback: fallback.motionEnabledText),
+            motionActionNeededText: string(values, "motionActionNeededText", fallback: fallback.motionActionNeededText),
+            fixInSettingsButtonTitle: string(values, "fixInSettingsButtonTitle", fallback: fallback.fixInSettingsButtonTitle),
+            skipButtonTitle: string(values, "skipButtonTitle", fallback: fallback.skipButtonTitle)
+        )
+    }
+
+    private func wizardTheme(_ values: [String: Any], fallback: RPPermissionsWizardTheme) -> RPPermissionsWizardTheme {
+        RPPermissionsWizardTheme(
+            backgroundColor: color(values["backgroundColor"], fallback: fallback.backgroundColor),
+            gradientStartColor: color(values["gradientStartColor"], fallback: fallback.gradientStartColor),
+            gradientEndColor: color(values["gradientEndColor"], fallback: fallback.gradientEndColor),
+            titleTextColor: color(values["titleTextColor"], fallback: fallback.titleTextColor),
+            bodyTextColor: color(values["bodyTextColor"], fallback: fallback.bodyTextColor),
+            primaryElementColor: color(values["primaryElementColor"], fallback: fallback.primaryElementColor),
+            secondaryElementColor: color(values["secondaryElementColor"], fallback: fallback.secondaryElementColor),
+            buttonTextColor: color(values["buttonTextColor"], fallback: fallback.buttonTextColor),
+            cardBackgroundColor: color(values["cardBackgroundColor"], fallback: fallback.cardBackgroundColor),
+            successElementColor: color(values["successElementColor"], fallback: fallback.successElementColor),
+            warningElementColor: color(values["warningElementColor"], fallback: fallback.warningElementColor),
+            secondaryButtonTextColor: color(values["secondaryButtonTextColor"], fallback: fallback.secondaryButtonTextColor),
+            secondaryButtonBackgroundColor: color(values["secondaryButtonBackgroundColor"], fallback: fallback.secondaryButtonBackgroundColor),
+            statusIndicatorTextColor: color(values["statusIndicatorTextColor"], fallback: fallback.statusIndicatorTextColor),
+            modalScrimColor: color(values["modalScrimColor"], fallback: fallback.modalScrimColor)
+        )
+    }
+
+    private func dictionary(from value: Any?) -> [String: Any] {
+        value as? [String: Any] ?? [:]
+    }
+
+    private func string(_ values: [String: Any], _ key: String, fallback: String) -> String {
+        values[key] as? String ?? fallback
+    }
+
+    private func bool(_ values: [String: Any], _ key: String, fallback: Bool) -> Bool {
+        values[key] as? Bool ?? fallback
+    }
+
+    private func color(_ value: Any?, fallback: UIColor) -> UIColor {
+        guard
+            let value = value as? String,
+            value.first == "#"
+        else {
+            return fallback
+        }
+
+        let hex = String(value.dropFirst())
+        guard
+            hex.count == 6 || hex.count == 8,
+            let parsedColor = UInt64(hex, radix: 16)
+        else {
+            return fallback
+        }
+
+        let colorValue = hex.count == 6 ? parsedColor | 0xFF000000 : parsedColor
+        let alpha = CGFloat((colorValue >> 24) & 0xFF) / 255
+        let red = CGFloat((colorValue >> 16) & 0xFF) / 255
+        let green = CGFloat((colorValue >> 8) & 0xFF) / 255
+        let blue = CGFloat(colorValue & 0xFF) / 255
+        return UIColor(red: red, green: green, blue: blue, alpha: alpha)
+    }
+
+    private func setProperties(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        guard let properties = stringDictionaryArgument(call, key: "properties", result: result) else {
+            return
+        }
+
+        do {
+            try RPEntry.instance.setProperties(dict: properties)
+            result(nil)
+        } catch {
+            result(FlutterError(
+                code: FlutterPluginCode.failure,
+                message: error.localizedDescription,
+                details: nil
+            ))
+        }
+    }
+
+    private func getProperties(_ result: @escaping FlutterResult) {
+        result(RPEntry.instance.getProperties())
+    }
+
+    private func clearProperties(_ result: @escaping FlutterResult) {
+        RPEntry.instance.clearProperties()
+        result(nil)
+    }
+
+    private func setSubUnits(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        guard let subUnits = stringDictionaryArgument(call, key: "subUnits", result: result) else {
+            return
+        }
+
+        do {
+            try RPEntry.instance.setSubUnits(dict: subUnits)
+            result(nil)
+        } catch {
+            result(FlutterError(
+                code: FlutterPluginCode.failure,
+                message: error.localizedDescription,
+                details: nil
+            ))
+        }
+    }
+
+    private func getSubUnits(_ result: @escaping FlutterResult) {
+        result(RPEntry.instance.getSubUnits())
+    }
+
+    private func clearSubUnits(_ result: @escaping FlutterResult) {
+        RPEntry.instance.clearSubUnits()
+        result(nil)
+    }
+
+    private func addActivityLog(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+        let arguments = dictionary(from: call.arguments)
+        guard let text = arguments["text"] as? String else {
+            result(FlutterError(
+                code: FlutterPluginCode.failure,
+                message: "text is required",
+                details: nil
+            ))
+            return
+        }
+        guard let data = stringDictionaryArgument(call, key: "data", result: result) else {
+            return
+        }
+
+        do {
+            try RPEntry.instance.addActivityLog(text: text, data: data)
+            result(nil)
+        } catch {
+            result(FlutterError(
+                code: FlutterPluginCode.failure,
+                message: error.localizedDescription,
+                details: nil
+            ))
+        }
+    }
+
+    private func stringDictionaryArgument(
+        _ call: FlutterMethodCall,
+        key: String,
+        result: @escaping FlutterResult
+    ) -> [String: String]? {
+        let arguments = dictionary(from: call.arguments)
+        guard let dictionary = stringDictionary(from: arguments[key]) else {
+            result(FlutterError(
+                code: FlutterPluginCode.failure,
+                message: "\(key) must contain only string keys and values",
+                details: nil
+            ))
+            return nil
+        }
+        return dictionary
+    }
+
+    private func stringDictionary(from value: Any?) -> [String: String]? {
+        guard let values = value as? [String: Any] else {
+            return nil
+        }
+
+        var strings = [String: String](minimumCapacity: values.count)
+        for (key, value) in values {
+            guard let stringValue = value as? String else {
+                return nil
+            }
+            strings[key] = stringValue
+        }
+        return strings
     }
     
     private func setAggressiveHeartbeats(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
