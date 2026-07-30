@@ -1,5 +1,8 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:telematics_sdk/telematics_sdk.dart';
@@ -7,6 +10,10 @@ import 'package:telematics_sdk/telematics_sdk.dart';
 const _sizedBoxSpace = SizedBox(height: 24);
 const _futureTrackTag = 'MyBestTripTagForRPTest';
 const _futureTrackTagSource = 'RPTestSource';
+const _demoProperties = {'order_id': 'Demo-12345', 'shift': 'Demo-morning'};
+const _demoSubUnits = {'DriverId': 'Demo-D-001', 'VehicleId': 'Demo-V-002'};
+const _demoActivityLogText = 'Demo activity log from Flutter example';
+const _demoActivityLogData = {'source': 'Flutter example'};
 
 class TitleScreen extends StatefulWidget {
   TitleScreen({Key? key}) : super(key: key);
@@ -36,6 +43,8 @@ class _TitleScreenState extends State<TitleScreen> {
   var _isAggressiveHeartbeats = false;
   TrackingMode? _trackingMode;
   TrackLocation? _location;
+  Map<String, String> _properties = const {};
+  Map<String, String> _subUnits = const {};
 
   final _tokenEditingController = TextEditingController();
   final _maxPersistentIntervalController = TextEditingController();
@@ -68,10 +77,6 @@ class _TitleScreenState extends State<TitleScreen> {
     final virtualDeviceToken = await _trackingApi.getDeviceId();
     _sdkDeviceId = virtualDeviceToken ?? '-';
 
-    if (_sdkDeviceId.isEmpty) {
-      await _trackingApi.setEnableSdk(enable: false);
-    }
-
     _isSdkEnabled = await _trackingApi.isSdkEnabled() ?? false;
     _isAllRequiredPermissionsGranted =
         await _trackingApi.isAllRequiredPermissionsAndSensorsGranted() ?? false;
@@ -89,6 +94,19 @@ class _TitleScreenState extends State<TitleScreen> {
     if (maxPersistentTrackingInterval != null) {
       _maxPersistentIntervalController.text = maxPersistentTrackingInterval
           .toString();
+    }
+
+    try {
+      final dictionaries = await Future.wait([
+        _trackingApi.getProperties(),
+        _trackingApi.getSubUnits(),
+      ]);
+      _properties = dictionaries[0];
+      _subUnits = dictionaries[1];
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Failed to load properties and sub-units: $e');
+      }
     }
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -192,7 +210,58 @@ class _TitleScreenState extends State<TitleScreen> {
             },
           ),
           const SizedBox(height: 8),
-          const Text('Future Track Tags'),
+          const Text('Properties'),
+          Text('Current properties: ${_formatDictionary(_properties)}'),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ElevatedButton(
+                onPressed: _onSetProperties,
+                child: const Text('Set Properties'),
+              ),
+              ElevatedButton(
+                onPressed: _onGetProperties,
+                child: const Text('Get Properties'),
+              ),
+              ElevatedButton(
+                onPressed: _onClearProperties,
+                child: const Text('Clear Properties'),
+              ),
+            ],
+          ),
+          _sizedBoxSpace,
+          const Text('Sub-units'),
+          Text('Current sub-units: ${_formatDictionary(_subUnits)}'),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ElevatedButton(
+                onPressed: _onSetSubUnits,
+                child: const Text('Set Sub-units'),
+              ),
+              ElevatedButton(
+                onPressed: _onGetSubUnits,
+                child: const Text('Get Sub-units'),
+              ),
+              ElevatedButton(
+                onPressed: _onClearSubUnits,
+                child: const Text('Clear Sub-units'),
+              ),
+            ],
+          ),
+          _sizedBoxSpace,
+          const Text('Activity Log'),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: _onAddActivityLog,
+            child: const Text('Add Demo Activity Log'),
+          ),
+          _sizedBoxSpace,
+          const Text('Future Track Tags (Deprecated)'),
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: _onGetFutureTrackTags,
@@ -430,6 +499,82 @@ class _TitleScreenState extends State<TitleScreen> {
     }
   }
 
+  Future<void> _onSetProperties() async {
+    try {
+      await _trackingApi.setProperties(properties: _demoProperties);
+      await _onGetProperties();
+    } catch (e) {
+      _showSnackBar('setProperties failed: $e');
+    }
+  }
+
+  Future<void> _onGetProperties() async {
+    try {
+      final properties = await _trackingApi.getProperties();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _properties = properties;
+      });
+    } catch (e) {
+      _showSnackBar('getProperties failed: $e');
+    }
+  }
+
+  Future<void> _onClearProperties() async {
+    try {
+      await _trackingApi.clearProperties();
+      await _onGetProperties();
+    } catch (e) {
+      _showSnackBar('clearProperties failed: $e');
+    }
+  }
+
+  Future<void> _onSetSubUnits() async {
+    try {
+      await _trackingApi.setSubUnits(subUnits: _demoSubUnits);
+      await _onGetSubUnits();
+    } catch (e) {
+      _showSnackBar('setSubUnits failed: $e');
+    }
+  }
+
+  Future<void> _onGetSubUnits() async {
+    try {
+      final subUnits = await _trackingApi.getSubUnits();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _subUnits = subUnits;
+      });
+    } catch (e) {
+      _showSnackBar('getSubUnits failed: $e');
+    }
+  }
+
+  Future<void> _onClearSubUnits() async {
+    try {
+      await _trackingApi.clearSubUnits();
+      await _onGetSubUnits();
+    } catch (e) {
+      _showSnackBar('clearSubUnits failed: $e');
+    }
+  }
+
+  Future<void> _onAddActivityLog() async {
+    try {
+      await _trackingApi.addActivityLog(
+        text: _demoActivityLogText,
+        data: _demoActivityLogData,
+      );
+      _showSnackBar('Demo activity log added');
+    } catch (e) {
+      _showSnackBar('addActivityLog failed: $e');
+    }
+  }
+
   Future<void> _onGetFutureTrackTags() async {
     try {
       await _trackingApi.getFutureTrackTags();
@@ -555,8 +700,11 @@ class _TitleScreenState extends State<TitleScreen> {
   Future<void> _onPermissionsSDK() async {
     if (!_isAllRequiredPermissionsGranted) {
       _trackingApi.showPermissionWizard(
-        enableAggressivePermissionsWizard: false,
-        enableAggressivePermissionsWizardPage: true,
+        android: const AndroidPermissionWizardOptions(
+          themeMode: AndroidPermissionWizardThemeMode.system,
+          blockEarlyExit: false,
+          skipWizardPages: false,
+        ),
       );
     } else {
       _showSnackBar('All permissions are already granted');
@@ -717,5 +865,12 @@ class _TitleScreenState extends State<TitleScreen> {
     } else {
       return 'Location: null';
     }
+  }
+
+  String _formatDictionary(Map<String, String> dictionary) {
+    if (dictionary.isEmpty) {
+      return '{}';
+    }
+    return '{${dictionary.entries.map((entry) => '${entry.key}: ${entry.value}').join(', ')}}';
   }
 }

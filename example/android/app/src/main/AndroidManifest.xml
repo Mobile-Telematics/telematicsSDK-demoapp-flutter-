@@ -45,7 +45,7 @@
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <activity
-            android:name="com.telematicssdk.tracking.utils.permissions.PermissionsWizardActivity"
+            android:name="com.telematicssdk.tracking.utils.permissions.TrackingPermissionsWizardActivity"
             android:theme="@style/NormalTheme"
             android:exported="false" />
 

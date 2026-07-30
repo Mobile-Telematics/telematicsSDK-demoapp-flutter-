@@ -22,7 +22,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    compileSdkVersion 36
+    compileSdkVersion 37
     namespace "com.telematicssdk.example"
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -76,6 +76,6 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
-    implementation "com.telematicssdk:tracking:4.0.0"
+    implementation "com.telematicssdk:tracking:4.1.0"
     implementation 'androidx.appcompat:appcompat:1.6.1'
 }
